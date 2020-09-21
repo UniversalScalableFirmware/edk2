@@ -9,62 +9,8 @@
 
 
 /**
-   Transfers control to DxeCore.
-
-   This function performs a CPU architecture specific operations to execute
-   the entry point of DxeCore with the parameters of HobList.
-
-   @param DxeCoreEntryPoint         The entry point of DxeCore.
-   @param HobList                   The start of HobList passed to DxeCore.
-
-**/
-VOID
-HandOffToDxeCore (
-  IN EFI_PHYSICAL_ADDRESS   DxeCoreEntryPoint,
-  IN EFI_PEI_HOB_POINTERS   HobList
-  );
-
-
-EFI_STATUS
-MemInfoCallback (
-  IN MEMROY_MAP_ENTRY          *MemoryMapEntry,
-  IN VOID                      *Params
-  )
-{
-  EFI_PHYSICAL_ADDRESS         Base;
-  EFI_RESOURCE_TYPE            Type;
-  UINT64                       Size;
-  EFI_RESOURCE_ATTRIBUTE_TYPE  Attribue;
-
-  Type    = (MemoryMapEntry->Type == 1) ? EFI_RESOURCE_SYSTEM_MEMORY : EFI_RESOURCE_MEMORY_RESERVED;
-  Base    = MemoryMapEntry->Base;
-  Size    = MemoryMapEntry->Size;
-
-  Attribue = EFI_RESOURCE_ATTRIBUTE_PRESENT |
-             EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-             EFI_RESOURCE_ATTRIBUTE_TESTED |
-             EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-             EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-             EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-             EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
-
-  if (Base >= BASE_4GB ) {
-    // Remove tested attribute to avoid DXE core to dispatch driver to memory above 4GB
-    Attribue &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
-  }
-
-  BuildResourceDescriptorHob (Type, Attribue, (EFI_PHYSICAL_ADDRESS)Base, Size);
-  DEBUG ((DEBUG_INFO , "buildhob: base = 0x%lx, size = 0x%lx, type = 0x%x\n", Base, Size, Type));
-
-  return EFI_SUCCESS;
-}
-
-
-
-/**
   Find the board related info from ACPI table
 
-  @param  AcpiTableBase          ACPI table start address in memory
   @param  AcpiBoardInfo          Pointer to the acpi board info strucutre
 
   @retval RETURN_SUCCESS     Successfully find out all the required information.
@@ -73,7 +19,6 @@ MemInfoCallback (
 **/
 RETURN_STATUS
 ParseAcpiInfo (
-  IN   UINT64                                   AcpiTableBase,
   OUT  ACPI_BOARD_INFO                          *AcpiBoardInfo
   )
 {
@@ -89,8 +34,21 @@ ParseAcpiInfo (
   UINT32                                        *Signature;
   EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_BASE_ADDRESS_TABLE_HEADER *MmCfgHdr;
   EFI_ACPI_MEMORY_MAPPED_ENHANCED_CONFIGURATION_SPACE_BASE_ADDRESS_ALLOCATION_STRUCTURE *MmCfgBase;
+  UINT64                                        AcpiBase;
+  ACPI_TABLE_HOB                                *AcpiHob;
+  EFI_HOB_GUID_TYPE                             *GuidHob;
 
-  Rsdp = (EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER *)(UINTN)AcpiTableBase;
+  AcpiBase = 0;
+  GuidHob  = GetFirstGuidHob (&gEfiAcpi20TableGuid);
+  if (GuidHob != NULL) {
+    AcpiHob  = (ACPI_TABLE_HOB *) GET_GUID_HOB_DATA (GuidHob);
+    AcpiBase = AcpiHob->TableAddress;
+  }
+  if (AcpiBase == 0) {
+    return EFI_NOT_FOUND;
+  }
+
+  Rsdp = (EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER *)(UINTN)AcpiBase;
   DEBUG ((DEBUG_INFO, "Rsdp at 0x%p\n", Rsdp));
   DEBUG ((DEBUG_INFO, "Rsdt at 0x%x, Xsdt at 0x%lx\n", Rsdp->RsdtAddress, Rsdp->XsdtAddress));
 
@@ -234,61 +192,27 @@ BuildHobFromBl (
   )
 {
   EFI_STATUS                       Status;
-  SYSTEM_TABLE_INFO                SysTableInfo;
-  SYSTEM_TABLE_INFO                *NewSysTableInfo;
+  EFI_PEI_HOB_POINTERS             Hob;
   ACPI_BOARD_INFO                  AcpiBoardInfo;
   ACPI_BOARD_INFO                  *NewAcpiBoardInfo;
-  EFI_PEI_GRAPHICS_INFO_HOB        GfxInfo;
-  EFI_PEI_GRAPHICS_INFO_HOB        *NewGfxInfo;
-  EFI_PEI_GRAPHICS_DEVICE_INFO_HOB GfxDeviceInfo;
-  EFI_PEI_GRAPHICS_DEVICE_INFO_HOB *NewGfxDeviceInfo;
 
   //
-  // Parse memory info and build memory HOBs
+  // Look through the HOB list from bootloader.
   //
-  Status = ParseMemoryInfo (MemInfoCallback, NULL);
-  if (EFI_ERROR(Status)) {
-    return Status;
+  Hob.Raw = (UINT8 *) GET_BOOTLOADER_PARAMETER();
+  ASSERT (Hob.Raw != NULL);
+  while (!END_OF_HOB_LIST (Hob)) {
+    if (Hob.Header->HobType != EFI_HOB_TYPE_HANDOFF) {
+      // Add this hob to payload HOB
+      AddNewHob (&Hob);
+    }
+    Hob.Raw = GET_NEXT_HOB (Hob);
   }
 
   //
-  // Create guid hob for frame buffer information
+  // Create guid hob from ACPI table for acpi board information
   //
-  Status = ParseGfxInfo (&GfxInfo);
-  if (!EFI_ERROR (Status)) {
-    NewGfxInfo = BuildGuidHob (&gEfiGraphicsInfoHobGuid, sizeof (GfxInfo));
-    ASSERT (NewGfxInfo != NULL);
-    CopyMem (NewGfxInfo, &GfxInfo, sizeof (GfxInfo));
-    DEBUG ((DEBUG_INFO, "Created graphics info hob\n"));
-  }
-
-
-  Status = ParseGfxDeviceInfo (&GfxDeviceInfo);
-  if (!EFI_ERROR (Status)) {
-    NewGfxDeviceInfo = BuildGuidHob (&gEfiGraphicsDeviceInfoHobGuid, sizeof (GfxDeviceInfo));
-    ASSERT (NewGfxDeviceInfo != NULL);
-    CopyMem (NewGfxDeviceInfo, &GfxDeviceInfo, sizeof (GfxDeviceInfo));
-    DEBUG ((DEBUG_INFO, "Created graphics device info hob\n"));
-  }
-
-
-  //
-  // Create guid hob for system tables like acpi table and smbios table
-  //
-  Status = ParseSystemTable(&SysTableInfo);
-  ASSERT_EFI_ERROR (Status);
-  if (!EFI_ERROR (Status)) {
-    NewSysTableInfo = BuildGuidHob (&gUefiSystemTableInfoGuid, sizeof (SYSTEM_TABLE_INFO));
-    ASSERT (NewSysTableInfo != NULL);
-    CopyMem (NewSysTableInfo, &SysTableInfo, sizeof (SYSTEM_TABLE_INFO));
-    DEBUG ((DEBUG_INFO, "Detected Acpi Table at 0x%lx, length 0x%x\n", SysTableInfo.AcpiTableBase, SysTableInfo.AcpiTableSize));
-    DEBUG ((DEBUG_INFO, "Detected Smbios Table at 0x%lx, length 0x%x\n", SysTableInfo.SmbiosTableBase, SysTableInfo.SmbiosTableSize));
-  }
-
-  //
-  // Create guid hob for acpi board information
-  //
-  Status = ParseAcpiInfo (SysTableInfo.AcpiTableBase, &AcpiBoardInfo);
+  Status = ParseAcpiInfo (&AcpiBoardInfo);
   ASSERT_EFI_ERROR (Status);
   if (!EFI_ERROR (Status)) {
     NewAcpiBoardInfo = BuildGuidHob (&gUefiAcpiBoardInfoGuid, sizeof (ACPI_BOARD_INFO));
@@ -311,56 +235,6 @@ BuildHobFromBl (
 
 
 /**
-  This function will build some generic HOBs that doesn't depend on information from bootloaders.
-
-**/
-VOID
-BuildGenericHob (
-  VOID
-  )
-{
-  UINT32                           RegEax;
-  UINT8                            PhysicalAddressBits;
-  EFI_RESOURCE_ATTRIBUTE_TYPE      ResourceAttribute;
-
-  // The UEFI payload FV
-  BuildMemoryAllocationHob (PcdGet32 (PcdPayloadFdMemBase), PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
-
-  //
-  // Build CPU memory space and IO space hob
-  //
-  AsmCpuid (0x80000000, &RegEax, NULL, NULL, NULL);
-  if (RegEax >= 0x80000008) {
-    AsmCpuid (0x80000008, &RegEax, NULL, NULL, NULL);
-    PhysicalAddressBits = (UINT8) RegEax;
-  } else {
-    PhysicalAddressBits  = 36;
-  }
-
-  BuildCpuHob (PhysicalAddressBits, 16);
-
-  //
-  // Report Local APIC range, cause sbl HOB to be NULL, comment now
-  //
-  ResourceAttribute = (
-      EFI_RESOURCE_ATTRIBUTE_PRESENT |
-      EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-      EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-      EFI_RESOURCE_ATTRIBUTE_TESTED
-  );
-  BuildResourceDescriptorHob (EFI_RESOURCE_MEMORY_MAPPED_IO, ResourceAttribute, 0xFEC80000, SIZE_512KB);
-  BuildMemoryAllocationHob ( 0xFEC80000, SIZE_512KB, EfiMemoryMappedIO);
-
-
-//  if (FeaturePcdGet (PcdPrePiProduceMemoryTypeInformationHob)) {
-    // Optional feature that helps prevent EFI memory map fragmentation.
-//    BuildMemoryTypeInformationHob ();
-//  }
-
-}
-
-
-/**
   Entry point to the C language phase of UEFI payload.
 
   @retval      It will not return if SUCCESS, and return error when passing bootloader parameter.
@@ -373,7 +247,6 @@ PayloadEntry (
 {
   EFI_STATUS                    Status;
   PHYSICAL_ADDRESS              DxeCoreEntryPoint;
-  EFI_HOB_HANDOFF_INFO_TABLE    *HandoffHobTable;
   UINTN                         HobMemBase;
   UINTN                         HobMemSize;
   EFI_PEI_HOB_POINTERS          Hob;
@@ -387,22 +260,21 @@ PayloadEntry (
   // Init the region for HOB and memory allocation for this module
   HobMemBase      = ALIGN_VALUE (PcdGet32 (PcdPayloadFdMemBase) + PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
   HobMemSize      = FixedPcdGet32 (PcdSystemMemoryUefiRegionSize);
-  HandoffHobTable = HobConstructor ((VOID *)HobMemBase, HobMemSize, (VOID *)HobMemBase, (VOID *)(HobMemBase + HobMemSize));
+  HobConstructor ((VOID *)HobMemBase, HobMemSize, (VOID *)HobMemBase, (VOID *)(HobMemBase + HobMemSize));
+  DEBUG ((EFI_D_ERROR, "HobMemBase = 0x%x, HobMemSize = 0x%x\n", HobMemBase, HobMemSize));
 
   // Build HOB based on information from Bootloader
   Status = BuildHobFromBl ();
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "BuildHobFromBl Status = %r\n", Status));
     return Status;
   }
 
-  // Build other HOBs required by DXE
-  BuildGenericHob ();
+  // The UEFI payload FV
+  BuildMemoryAllocationHob (PcdGet32 (PcdPayloadFdMemBase), PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
 
   // Load the DXE Core
   Status = LoadDxeCore (&DxeCoreEntryPoint);
   ASSERT_EFI_ERROR (Status);
-
   DEBUG ((EFI_D_INFO, "DxeCoreEntryPoint = 0x%lx\n", DxeCoreEntryPoint));
 
   //

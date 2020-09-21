@@ -31,6 +31,8 @@
 #include <Guid/MemoryMapInfoGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/GraphicsInfoHob.h>
+#include <Guid/AcpiTableGuid.h>
+#include <Guid/SmbiosTableGuid.h>
 
 
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
@@ -81,5 +83,31 @@ LoadDxeCore (
   OUT PHYSICAL_ADDRESS        *DxeCoreEntryPoint
   );
 
+/**
+   Transfers control to DxeCore.
+
+   This function performs a CPU architecture specific operations to execute
+   the entry point of DxeCore with the parameters of HobList.
+
+   @param DxeCoreEntryPoint         The entry point of DxeCore.
+   @param HobList                   The start of HobList passed to DxeCore.
+
+**/
+VOID
+HandOffToDxeCore (
+  IN EFI_PHYSICAL_ADDRESS   DxeCoreEntryPoint,
+  IN EFI_PEI_HOB_POINTERS   HobList
+  );
+
+/**
+  Add HOB into HOB list
+
+  @param[in]  Hob    The HOB to be added into the HOB list.
+**/
+VOID
+EFIAPI
+AddNewHob (
+  IN EFI_PEI_HOB_POINTERS    *Hob
+  );
 
 #endif

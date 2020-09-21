@@ -55,6 +55,7 @@ AllocatePages (
   HobTable->EfiFreeMemoryTop -= Pages * EFI_PAGE_SIZE;
   BuildMemoryAllocationHob (HobTable->EfiFreeMemoryTop, Pages * EFI_PAGE_SIZE, EfiBootServicesData);
 
+      DEBUG ((EFI_D_ERROR, "   AllocatePages address= 0x%llx\n",  HobTable->EfiFreeMemoryTop));
   return (VOID *)(UINTN)HobTable->EfiFreeMemoryTop;
 }
 

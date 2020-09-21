@@ -92,6 +92,12 @@
   INTEL:RELEASE_*_*_CC_FLAGS     = /D MDEPKG_NDEBUG
   MSFT:RELEASE_*_*_CC_FLAGS      = /D MDEPKG_NDEBUG
 
+[BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER]
+  GCC:*_*_*_DLINK_FLAGS      = -z common-page-size=0x1000
+  XCODE:*_*_*_DLINK_FLAGS    = -seg1addr 0x1000 -segalign 0x1000
+  XCODE:*_*_*_MTOC_FLAGS     = -align 0x1000
+  CLANGPDB:*_*_*_DLINK_FLAGS = /ALIGN:4096
+  MSFT:*_*_*_DLINK_FLAGS     = /ALIGN:4096
 
 ################################################################################
 #
@@ -196,7 +202,7 @@
 !if $(BOOTLOADER) == "COREBOOT"
   BlParseLib|UefiPayloadPkg/Library/CbParseLib/CbParseLib.inf
 !else
-  BlParseLib|UefiPayloadPkg/Library/SblParseLib/SblParseLib.inf
+  #BlParseLib|UefiPayloadPkg/Library/SblParseLib/SblParseLib.inf
 !endif
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf

@@ -14,7 +14,6 @@
 #include <Library/DebugLib.h>
 #include <Library/HobLib.h>
 #include <Library/PcdLib.h>
-//#include <Guid/MemoryAllocationHob.h>
 
 VOID      *mHobList;
 
@@ -669,6 +668,9 @@ BuildMemoryAllocationHob (
 
   Hob = CreateHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, sizeof (EFI_HOB_MEMORY_ALLOCATION));
 
+  DEBUG ((EFI_D_ERROR, "   BuildMemoryAllocationHob BaseAddress= 0x%llx,Length = 0x%llx, MemoryType= 0x%x\n",  BaseAddress, Length, MemoryType));
+  DEBUG ((EFI_D_ERROR, "   Hob = 0x%p\n",  Hob));
+
   ZeroMem (&(Hob->AllocDescriptor.Name), sizeof (EFI_GUID));
   Hob->AllocDescriptor.MemoryBaseAddress = BaseAddress;
   Hob->AllocDescriptor.MemoryLength      = Length;
@@ -677,5 +679,32 @@ BuildMemoryAllocationHob (
   // Zero the reserved space to match HOB spec
   //
   ZeroMem (Hob->AllocDescriptor.Reserved, sizeof (Hob->AllocDescriptor.Reserved));
+}
+
+
+/**
+  Add HOB into HOB list
+
+  @param[in]  Hob    The HOB to be added into the HOB list.
+**/
+VOID
+EFIAPI
+AddNewHob (
+  IN EFI_PEI_HOB_POINTERS    *Hob
+  )
+{
+  EFI_PEI_HOB_POINTERS    NewHob;
+
+  if (Hob->Raw == NULL) {
+    return ;
+  }
+
+  NewHob.Header = CreateHob (Hob->Header->HobType, Hob->Header->HobLength);
+  DEBUG ((EFI_D_ERROR, "   Add hob, type = 0x%x, 0x%x\n", Hob->Header->HobType, Hob->Header->HobLength));
+
+  if (NewHob.Header != NULL) {
+    CopyMem (NewHob.Header + 1, Hob->Header + 1, Hob->Header->HobLength - sizeof (EFI_HOB_GENERIC_HEADER));
+  }
+
 }
 

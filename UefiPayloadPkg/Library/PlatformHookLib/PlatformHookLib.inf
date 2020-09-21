@@ -20,14 +20,17 @@
   PlatformHookLib.c
 
 [LibraryClasses]
-  BlParseLib
   PcdLib
-  PciLib
+  BaseLib
+  HobLib
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
+
+[Guids]
+  gUefiSerialPortInfoGuid
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio         ## PRODUCES
@@ -37,3 +40,4 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate       ## PRODUCES
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate         ## PRODUCES
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciSerialParameters   ## PRODUCES
+  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop

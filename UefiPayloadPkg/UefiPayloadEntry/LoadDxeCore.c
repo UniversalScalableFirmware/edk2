@@ -21,15 +21,23 @@ AllocateCodePages (
     return NULL;
   }
 
+  DEBUG ((EFI_D_ERROR, "Alloc addr = 0x%p\n",  Alloc));
+  DEBUG ((EFI_D_ERROR, "Alloc addr = 0x%llx\n",  (UINTN)Alloc));
+
+
   // find the HOB we just created, and change the type to EfiBootServicesCode
   Hob.Raw = GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION);
   while (Hob.Raw != NULL) {
+     DEBUG ((EFI_D_ERROR, "   MemoryBaseAddress = 0x%llx\n",  Hob.MemoryAllocation->AllocDescriptor.MemoryBaseAddress));
+
     if (Hob.MemoryAllocation->AllocDescriptor.MemoryBaseAddress == (UINTN)Alloc) {
       Hob.MemoryAllocation->AllocDescriptor.MemoryType = EfiBootServicesCode;
       return Alloc;
     }
     Hob.Raw = GetNextHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, GET_NEXT_HOB (Hob));
   }
+
+  DEBUG ((EFI_D_ERROR, " Not found\n"));
 
   ASSERT (FALSE);
 
