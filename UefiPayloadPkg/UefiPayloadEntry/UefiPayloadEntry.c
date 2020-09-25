@@ -250,15 +250,39 @@ PayloadEntry (
   UINTN                         HobMemBase;
   UINTN                         HobMemSize;
   EFI_PEI_HOB_POINTERS          Hob;
+  EFI_FIRMWARE_VOLUME_HEADER   *FvHdr;
+  UINTN                         FdBase;
+  UINTN                         Start;
+  UINTN                         End;
 
   DEBUG ((EFI_D_ERROR, "GET_BOOTLOADER_PARAMETER() = 0x%lx\n", GET_BOOTLOADER_PARAMETER()));
   DEBUG ((EFI_D_ERROR, "sizeof(UINTN) = 0x%x\n", sizeof(UINTN)));
+
+  // Calculate the FV base.
+  // Since this driver is the 1st driver in the 1st FV, and FV is loaded at 4KB boundary,
+  // the payload FV base can be located by searching backwards for maximum 128KB.
+  FdBase = 0;
+  Start  = ALIGN_VALUE ((UINTN)PayloadEntry, SIZE_4KB) - SIZE_4KB;
+  End    = Start - SIZE_128KB;
+  while (Start > End) {
+    FvHdr = (EFI_FIRMWARE_VOLUME_HEADER *)Start;
+    if (CompareGuid (&(FvHdr->FileSystemGuid), &gEfiFirmwareFileSystem2Guid)) {
+      FdBase = Start;
+      break;
+    }
+    Start -= SIZE_4KB;
+  }
+  DEBUG ((EFI_D_ERROR, "Payload Image Base = 0x%x\n", FdBase));
+
+  if (FdBase == 0) {
+    FdBase = PcdGet32 (PcdPayloadFdMemBase);
+  }
 
   // Initialize floating point operating environment to be compliant with UEFI spec.
   InitializeFloatingPointUnits ();
 
   // Init the region for HOB and memory allocation for this module
-  HobMemBase      = ALIGN_VALUE (PcdGet32 (PcdPayloadFdMemBase) + PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
+  HobMemBase      = ALIGN_VALUE (FdBase+ PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
   HobMemSize      = FixedPcdGet32 (PcdSystemMemoryUefiRegionSize);
   HobConstructor ((VOID *)HobMemBase, HobMemSize, (VOID *)HobMemBase, (VOID *)(HobMemBase + HobMemSize));
   DEBUG ((EFI_D_ERROR, "HobMemBase = 0x%x, HobMemSize = 0x%x\n", HobMemBase, HobMemSize));
@@ -270,10 +294,10 @@ PayloadEntry (
   }
 
   // The UEFI payload FV
-  BuildMemoryAllocationHob (PcdGet32 (PcdPayloadFdMemBase), PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
+  BuildMemoryAllocationHob (FdBase, PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
 
   // Load the DXE Core
-  Status = LoadDxeCore (&DxeCoreEntryPoint);
+  Status = LoadDxeCore (FdBase, &DxeCoreEntryPoint);
   ASSERT_EFI_ERROR (Status);
   DEBUG ((EFI_D_INFO, "DxeCoreEntryPoint = 0x%lx\n", DxeCoreEntryPoint));
 
@@ -288,5 +312,5 @@ PayloadEntry (
 
   // Should not get here
   CpuDeadLoop ();
-  return EFI_SUCCESS; 
+  return EFI_SUCCESS;
 }

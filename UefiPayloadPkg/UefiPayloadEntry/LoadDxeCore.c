@@ -224,13 +224,15 @@ FileFindSection (
 /**
   Find DXE core from FV and build DXE core HOBs.
 
+  @param[in]   FvBase                FV base to load DXE core from
   @param[out]  DxeCoreEntryPoint     DXE core entry point
 
   @retval EFI_SUCCESS        If it completed successfully.
-  @retval EFI_NOT_FOUND      If it failed to process DXE FV.
+  @retval EFI_NOT_FOUND      If it failed to load DXE FV.
 **/
 EFI_STATUS
 LoadDxeCore (
+  IN  UINTN                    FvBase,
   OUT PHYSICAL_ADDRESS        *DxeCoreEntryPoint
   )
 {
@@ -242,7 +244,7 @@ LoadDxeCore (
   EFI_PHYSICAL_ADDRESS        ImageAddress;
   UINT64                      ImageSize;
 
-  PayloadFv = (EFI_FIRMWARE_VOLUME_HEADER *)(UINTN)PcdGet32 (PcdPayloadFdMemBase);
+  PayloadFv = (EFI_FIRMWARE_VOLUME_HEADER *)FvBase;
 
   //
   // DXE FV is inside Payload FV. Here find DXE FV from Payload FV

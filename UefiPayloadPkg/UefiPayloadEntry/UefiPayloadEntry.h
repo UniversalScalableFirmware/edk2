@@ -73,6 +73,7 @@ HobConstructor (
 /**
   Find DXE core from FV and build DXE core HOBs.
 
+  @param[in]   FvBase                FV base to load DXE core from
   @param[out]  DxeCoreEntryPoint     DXE core entry point
 
   @retval EFI_SUCCESS        If it completed successfully.
@@ -80,6 +81,7 @@ HobConstructor (
 **/
 EFI_STATUS
 LoadDxeCore (
+  IN  UINTN                    FvBase,
   OUT PHYSICAL_ADDRESS        *DxeCoreEntryPoint
   );
 
