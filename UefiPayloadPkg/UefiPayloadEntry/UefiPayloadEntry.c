@@ -307,6 +307,10 @@ PayloadEntry (
   IoWrite8 (LEGACY_8259_MASK_REGISTER_MASTER, 0xFF);
   IoWrite8 (LEGACY_8259_MASK_REGISTER_SLAVE,  0xFF);
 
+  // Use the HOB created in payload entry instead of bootloader HOB
+  // since bootloader HOB might be overrided.
+  SET_BOOTLOADER_PARAMETER((UINTN)GetHobList());
+
   Hob.Raw = GetHobList();
   HandOffToDxeCore (DxeCoreEntryPoint, Hob);
 
