@@ -237,12 +237,16 @@ BuildHobFromBl (
 /**
   Entry point to the C language phase of UEFI payload.
 
+  @param[in]   ImageBase    The universal payload image base
+  @param[out]  PldEntry     Pointer to receive payload entry point
+
   @retval      It will not return if SUCCESS, and return error when passing bootloader parameter.
 **/
 EFI_STATUS
 EFIAPI
 PayloadEntry (
-  IN UINTN                     BootloaderParameter
+  IN UINTN                     BootloaderParameter,
+  IN UINTN                     FdBase
   )
 {
   EFI_STATUS                    Status;
@@ -250,33 +254,14 @@ PayloadEntry (
   UINTN                         HobMemBase;
   UINTN                         HobMemSize;
   EFI_PEI_HOB_POINTERS          Hob;
-  EFI_FIRMWARE_VOLUME_HEADER   *FvHdr;
-  UINTN                         FdBase;
-  UINTN                         Start;
-  UINTN                         End;
 
   DEBUG ((EFI_D_ERROR, "GET_BOOTLOADER_PARAMETER() = 0x%lx\n", GET_BOOTLOADER_PARAMETER()));
   DEBUG ((EFI_D_ERROR, "sizeof(UINTN) = 0x%x\n", sizeof(UINTN)));
 
-  // Calculate the FV base.
-  // Since this driver is the 1st driver in the 1st FV, and FV is loaded at 4KB boundary,
-  // the payload FV base can be located by searching backwards for maximum 128KB.
-  FdBase = 0;
-  Start  = ALIGN_VALUE ((UINTN)PayloadEntry, SIZE_4KB) - SIZE_4KB;
-  End    = Start - SIZE_128KB;
-  while (Start > End) {
-    FvHdr = (EFI_FIRMWARE_VOLUME_HEADER *)Start;
-    if (CompareGuid (&(FvHdr->FileSystemGuid), &gEfiFirmwareFileSystem2Guid)) {
-      FdBase = Start;
-      break;
-    }
-    Start -= SIZE_4KB;
-  }
-  DEBUG ((EFI_D_ERROR, "Payload Image Base = 0x%x\n", FdBase));
-
   if (FdBase == 0) {
     FdBase = PcdGet32 (PcdPayloadFdMemBase);
   }
+  DEBUG ((EFI_D_ERROR, "Payload Image Base = 0x%x\n", FdBase));
 
   // Initialize floating point operating environment to be compliant with UEFI spec.
   InitializeFloatingPointUnits ();

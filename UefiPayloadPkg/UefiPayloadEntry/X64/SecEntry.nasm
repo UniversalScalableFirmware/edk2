@@ -30,8 +30,9 @@ ASM_PFX(_ModuleEntryPoint):
   mov     rsp, FixedPcdGet32 (PcdPayloadStackTop)
 
   ;
-  ; Push the bootloader parameter address onto new stack
+  ; Push the bootloader parameter address and base onto new stack
   ;
+  push    rdx
   push    rcx
   mov     rax, 0
   push    rax ; shadow space
