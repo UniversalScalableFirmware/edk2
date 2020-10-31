@@ -9,6 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include "DxeIpl.h"
+#include <IndustryStandard/UniversalPayload.h>
 
 
 //
@@ -50,6 +51,88 @@ CONST EFI_PEI_NOTIFY_DESCRIPTOR mMemoryDiscoveredNotifyList = {
   &gEfiPeiMemoryDiscoveredPpiGuid,
   InstallIplPermanentMemoryPpis
 };
+
+
+EFI_GUID gUniversalPayload = {
+  0x86d53a55, 0xb604, 0x402e, {0x94, 0xa4, 0xac, 0x72, 0x20, 0xdd, 0x5c, 0x7b}
+  };
+
+
+/**
+  Load universal payload image into memory.
+
+  @param[in]  ImageBase    The universal payload image base
+  @param[in]  PldEntry     The payload image entry point
+  @param[in]  PldMachine   Indicate image machine type
+
+  @retval     EFI_SUCCESS      The image was loaded successfully
+              EFI_ABORTED      The image loading failed
+              EFI_UNSUPPORTED  The relocation format is not supported
+
+**/
+EFI_STATUS
+EFIAPI
+LoadUniversalPayload (
+  IN  UPLD_INFO_HEADER         *Pld,
+  OUT UINT8                    **PldData,
+  OUT UNIVERSAL_PAYLOAD_ENTRY  *PldEntry,
+  OUT UINT32                   *PldMachine
+  );
+
+/**
+  Find the compressed Universal Payload Image and decompresses it.
+
+  @param[in,out]  Fv            On input, the firmware volume to search
+                                On output, the decompressed BOOT/PEI FV
+
+  @retval EFI_SUCCESS           The file and section was found
+  @retval EFI_NOT_FOUND         The file and section was not found
+  @retval EFI_VOLUME_CORRUPTED  The firmware volume was corrupted
+
+**/
+UPLD_INFO_HEADER *
+PrepareUniversalPayload (
+  VOID
+  )
+{
+  EFI_STATUS                        Status;
+  UINTN                             Instance;
+  EFI_PEI_FV_HANDLE                 VolumeHandle;
+  EFI_PEI_FILE_HANDLE               FileHandle;
+  UPLD_INFO_HEADER                  *Upl;
+  //
+  // Searches Universal Payload File in all firmware Volumes
+  //
+
+  Instance = 0;
+  while (TRUE) {
+    //
+    // Traverse all firmware volume instances
+    //
+    Status = PeiServicesFfsFindNextVolume (Instance, &VolumeHandle);
+    ASSERT_EFI_ERROR (Status);
+
+    FileHandle = NULL;
+    Status = PeiServicesFfsFindFileByName (&gUniversalPayload, VolumeHandle, &FileHandle);
+    if (!EFI_ERROR (Status)) {
+      break;
+    }
+    //
+    // We cannot find DxeCore in this firmware volume, then search the next volume.
+    //
+    Instance++;
+  }
+
+  Status = PeiServicesFfsFindSectionData (EFI_SECTION_RAW, FileHandle, &Upl);
+  ASSERT_EFI_ERROR (Status);
+  
+  if (Upl->CommonHeader.Identifier != UPLD_IMAGE_HEADER_ID) {
+    DEBUG ((DEBUG_ERROR, "UPayload image format is invalid !\n"));
+    return NULL;
+  }
+
+  return Upl;
+}
 
 /**
   Entry point of DXE IPL PEIM.
@@ -393,6 +476,20 @@ DxeLoadCore (
     }
   }
 
+  // TODO: Load Payload and jump to it.
+  {
+    UPLD_INFO_HEADER                  *Pld;
+    UNIVERSAL_PAYLOAD_ENTRY           PldEntry;
+    UINT32                            PldMachine;
+    UINT8                             *PldData;
+
+    Pld = PrepareUniversalPayload ();
+    ASSERT (Pld != NULL);
+
+    LoadUniversalPayload (Pld, &PldData, &PldEntry, &PldMachine);
+    DEBUG ((DEBUG_ERROR, "Call to Pld Entry (0x%p, 0x%p)\n", HobList.Raw, PldData));
+    PldEntry (HobList.Raw, PldData);
+  }
   //
   // Look in all the FVs present in PEI and find the DXE Core FileHandle
   //
