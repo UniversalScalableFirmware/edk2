@@ -63,6 +63,7 @@ LoadPeCoffImage (
   ImageContext.Handle    = PeCoffImage;
   ImageContext.ImageRead = PeCoffLoaderImageReadFromMemory;
 
+  DEBUG ((DEBUG_INFO, "ImageRead(%d) = %p\n", __LINE__, ImageContext.ImageRead));
   Status = PeCoffLoaderGetImageInfo (&ImageContext);
   ASSERT_EFI_ERROR (Status);
 
@@ -72,11 +73,15 @@ LoadPeCoffImage (
   Buffer = AllocateCodePages (EFI_SIZE_TO_PAGES((UINT32)ImageContext.ImageSize));
   ASSERT (Buffer != 0);
 
+  * (UINT32 *) Buffer = 0x123456;
+  ASSERT (* (UINT32 *) Buffer == 0x123456);
+
   ImageContext.ImageAddress = (EFI_PHYSICAL_ADDRESS)(UINTN)Buffer;
 
   //
   // Load the image to our new buffer
   //
+  DEBUG ((DEBUG_INFO, "ImageRead(%d) = %p\n", __LINE__, ImageContext.ImageRead));
   Status = PeCoffLoaderLoadImage (&ImageContext);
   ASSERT_EFI_ERROR (Status);
 
@@ -90,6 +95,8 @@ LoadPeCoffImage (
   *ImageAddress = ImageContext.ImageAddress;
   *ImageSize    = ImageContext.ImageSize;
   *EntryPoint   = ImageContext.EntryPoint;
+
+  DEBUG ((DEBUG_INFO, "Image Address/Size/Entry = %lx / %lx / %p\n", *ImageAddress, *ImageSize, *EntryPoint));
 
   return Status;
 }
@@ -121,16 +128,21 @@ FvFindFile (
   CurrentAddress = (EFI_PHYSICAL_ADDRESS)(UINTN) FvHeader;
   EndOfFirmwareVolume = CurrentAddress + FvHeader->FvLength;
 
+  DEBUG ((DEBUG_INFO, "FV: %lx - %lx\n", CurrentAddress, EndOfFirmwareVolume));
   //
   // Loop through the FFS files
   //
   for (EndOfFile = CurrentAddress + FvHeader->HeaderLength; ; ) {
     CurrentAddress = (EndOfFile + 7) & 0xfffffffffffffff8ULL;
+  DEBUG ((DEBUG_INFO, "Current File: %lx\n", CurrentAddress));
     if (CurrentAddress > EndOfFirmwareVolume) {
       break;
     }
 
     File = (EFI_FFS_FILE_HEADER*)(UINTN) CurrentAddress;
+  DEBUG ((DEBUG_INFO, "Current File Type/Size: %x/%x\n", File->Type,
+  IS_FFS_FILE2 (File) ? FFS_FILE2_SIZE (File) : FFS_FILE_SIZE (File)
+  ));
     if (IS_FFS_FILE2 (File)) {
       Size = FFS_FILE2_SIZE (File);
       if (Size <= 0x00FFFFFF) {
@@ -251,16 +263,19 @@ LoadDxeCore (
   //
   Status = FvFindFile (PayloadFv, EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE, &FileHeader);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     return Status;
   }
   Status = FileFindSection (FileHeader, EFI_SECTION_FIRMWARE_VOLUME_IMAGE, (VOID **)&DxeCoreFv);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     return Status;
   }
 
   //
   // Report DXE FV to DXE core
   //
+  DEBUG ((DEBUG_INFO, "Report DXE FV: %p / %x\n", DxeCoreFv, DxeCoreFv->FvLength));
   BuildFvHob ((EFI_PHYSICAL_ADDRESS) (UINTN) DxeCoreFv, DxeCoreFv->FvLength);
 
   //
@@ -268,11 +283,13 @@ LoadDxeCore (
   //
   Status = FvFindFile (DxeCoreFv, EFI_FV_FILETYPE_DXE_CORE, &FileHeader);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     return Status;
   }
 
   Status = FileFindSection (FileHeader, EFI_SECTION_PE32, (VOID **)&PeCoffImage);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     return Status;
   }
 
@@ -281,6 +298,7 @@ LoadDxeCore (
   //
   Status = LoadPeCoffImage (PeCoffImage, &ImageAddress, &ImageSize, DxeCoreEntryPoint);
   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     return Status;
   }
 

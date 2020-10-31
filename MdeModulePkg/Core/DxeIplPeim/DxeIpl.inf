@@ -32,6 +32,7 @@
 [Sources]
   DxeIpl.h
   DxeLoad.c
+  UniversalPayloadLib.c
 
 [Sources.Ia32]
   X64/VirtualMemory.h

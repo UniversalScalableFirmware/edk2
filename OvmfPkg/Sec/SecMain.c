@@ -336,9 +336,9 @@ DecompressMemFvs (
   VOID                              *ScratchBuffer;
   EFI_COMMON_SECTION_HEADER         *FvSection;
   EFI_FIRMWARE_VOLUME_HEADER        *PeiMemFv;
-  EFI_FIRMWARE_VOLUME_HEADER        *DxeMemFv;
-  UINT32                            FvHeaderSize;
-  UINT32                            FvSectionSize;
+  //EFI_FIRMWARE_VOLUME_HEADER        *DxeMemFv;
+  //UINT32                            FvHeaderSize;
+  //UINT32                            FvSectionSize;
 
   FvSection = (EFI_COMMON_SECTION_HEADER*) NULL;
 
@@ -364,7 +364,7 @@ DecompressMemFvs (
     return Status;
   }
 
-  OutputBuffer = (VOID*) ((UINT8*)(UINTN) PcdGet32 (PcdOvmfDxeMemFvBase) + SIZE_1MB);
+  OutputBuffer = (VOID*) ((UINT8*)(UINTN) PcdGet32 (PcdOvmfPeiMemFvBase) + SIZE_1MB);
   ScratchBuffer = ALIGN_POINTER ((UINT8*) OutputBuffer + OutputBufferSize, SIZE_1MB);
 
   DEBUG ((DEBUG_VERBOSE, "%a: OutputBuffer@%p+0x%x ScratchBuffer@%p+0x%x "
@@ -410,6 +410,7 @@ DecompressMemFvs (
     return EFI_VOLUME_CORRUPTED;
   }
 
+  /*
   Status = FindFfsSectionInstance (
              OutputBuffer,
              OutputBufferSize,
@@ -442,6 +443,7 @@ DecompressMemFvs (
     CpuDeadLoop ();
     return EFI_VOLUME_CORRUPTED;
   }
+  */
 
   *Fv = PeiMemFv;
   return EFI_SUCCESS;

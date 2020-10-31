@@ -584,8 +584,11 @@ EnablePageTableProtection (
   // Disable write protection, because we need to mark page table to be write
   // protected.
   //
+  
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   AsmWriteCr0 (AsmReadCr0() & ~CR0_WP);
 
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   //
   // SetPageTablePoolReadOnly might update mPageTablePool. It's safer to
   // remember original one in advance.
@@ -593,6 +596,7 @@ EnablePageTableProtection (
   HeadPool = mPageTablePool;
   Pool = HeadPool;
   do {
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     Address  = (EFI_PHYSICAL_ADDRESS)(UINTN)Pool;
     PoolSize = Pool->Offset + EFI_PAGES_TO_SIZE (Pool->FreePages);
 
@@ -602,7 +606,9 @@ EnablePageTableProtection (
     // protection to them one by one.
     //
     while (PoolSize > 0) {
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
       SetPageTablePoolReadOnly(PageTableBase, Address, Level4Paging);
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
       Address   += PAGE_TABLE_POOL_UNIT_SIZE;
       PoolSize  -= PAGE_TABLE_POOL_UNIT_SIZE;
     }
@@ -610,10 +616,12 @@ EnablePageTableProtection (
     Pool = Pool->NextPool;
   } while (Pool != HeadPool);
 
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   //
   // Enable write protection, after page table attribute updated.
   //
   AsmWriteCr0 (AsmReadCr0() | CR0_WP);
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
 }
 
 /**
@@ -758,7 +766,9 @@ CreateIdentityMappingPageTables (
     NumberOfPdpEntriesNeeded, (UINT64)TotalPagesNum));
 
   BigPageAddress = (UINTN) AllocatePageTableMemory (TotalPagesNum);
+  DEBUG ((DEBUG_INFO, "Page table = %p\n", BigPageAddress));
   ASSERT (BigPageAddress != 0);
+
 
   //
   // By architecture only one PageMapLevel4 exists - so lets allocate storage for it.
@@ -816,6 +826,7 @@ CreateIdentityMappingPageTables (
 
         for (IndexOfPageDirectoryEntries = 0; IndexOfPageDirectoryEntries < 512; IndexOfPageDirectoryEntries++, PageDirectory1GEntry++, PageAddress += SIZE_1GB) {
           if (ToSplitPageTable (PageAddress, SIZE_1GB, StackBase, StackSize)) {
+            DEBUG ((DEBUG_INFO, "Split Pages!!!!!!!\n"));
             Split1GPageTo2M (PageAddress, (UINT64 *) PageDirectory1GEntry, StackBase, StackSize);
           } else {
             //
@@ -850,6 +861,7 @@ CreateIdentityMappingPageTables (
               //
               // Need to split this 2M page that covers NULL or stack range.
               //
+              DEBUG ((DEBUG_INFO, "Split Pages 2 !!!!!!!\n"));
               Split2MPageTo4K (PageAddress, (UINT64 *) PageDirectoryEntry, StackBase, StackSize);
             } else {
               //
@@ -876,7 +888,9 @@ CreateIdentityMappingPageTables (
     ZeroMem (PageMapLevel4Entry, (512 - IndexOfPml4Entries) * sizeof (PAGE_MAP_AND_DIRECTORY_POINTER));
   }
 
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   if (Page5LevelSupport) {
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     Cr4.UintN = AsmReadCr4 ();
     Cr4.Bits.LA57 = 1;
     AsmWriteCr4 (Cr4.UintN);
@@ -886,19 +900,23 @@ CreateIdentityMappingPageTables (
     ZeroMem (PageMapLevel5Entry, (512 - IndexOfPml5Entries) * sizeof (PAGE_MAP_AND_DIRECTORY_POINTER));
   }
 
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   //
   // Protect the page table by marking the memory used for page table to be
   // read-only.
   //
   EnablePageTableProtection ((UINTN)PageMap, TRUE);
 
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   //
   // Set IA32_EFER.NXE if necessary.
   //
   if (IsEnableNonExecNeeded ()) {
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
     EnableExecuteDisableBit ();
   }
 
+  DEBUG ((DEBUG_ERROR, "%d\n", __LINE__));
   return (UINTN)PageMap;
 }
 

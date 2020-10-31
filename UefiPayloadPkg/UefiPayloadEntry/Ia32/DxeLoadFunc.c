@@ -285,8 +285,11 @@ HandOffToDxeCore (
     //
     // Create page table and save PageMapLevel4 to CR3
     //
+    
+    DEBUG ((DEBUG_INFO, "Create page table.\n"));
     PageTables = CreateIdentityMappingPageTables (BaseOfStack, STACK_SIZE);
 
+    DEBUG ((DEBUG_INFO, "Back from Create page table.\n"));
     //
     // Paging might be already enabled. To avoid conflict configuration,
     // disable paging first anyway.
@@ -331,6 +334,7 @@ HandOffToDxeCore (
 
     gLidtDescriptor.Base = (UINTN) IdtTable;
 
+    DEBUG ((DEBUG_INFO, "About to set IDTR.\n"));
 
     AsmWriteIdtr (&gLidtDescriptor);
 

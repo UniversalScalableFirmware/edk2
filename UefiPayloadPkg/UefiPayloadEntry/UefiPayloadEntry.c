@@ -6,6 +6,7 @@
 **/
 
 #include "UefiPayloadEntry.h"
+#include <Library/SerialPortLib.h>
 
 
 /**
@@ -213,7 +214,7 @@ BuildHobFromBl (
   // Create guid hob from ACPI table for acpi board information
   //
   Status = ParseAcpiInfo (&AcpiBoardInfo);
-  ASSERT_EFI_ERROR (Status);
+  // ASSERT_EFI_ERROR (Status); It's easy for EDKII BL to build AcpiBoardInfo HOB directly.
   if (!EFI_ERROR (Status)) {
     NewAcpiBoardInfo = BuildGuidHob (&gUefiAcpiBoardInfoGuid, sizeof (ACPI_BOARD_INFO));
     ASSERT (NewAcpiBoardInfo != NULL);
@@ -233,6 +234,12 @@ BuildHobFromBl (
   return EFI_SUCCESS;
 }
 
+
+VOID
+EFIAPI
+ProcessLibraryConstructorList (
+  VOID
+  );
 
 /**
   Entry point to the C language phase of UEFI payload.
@@ -255,6 +262,10 @@ PayloadEntry (
   UINTN                         HobMemSize;
   EFI_PEI_HOB_POINTERS          Hob;
 
+  //
+  // Manually call library constructors otherwise the serial port cannot work due to PCD value not set.
+  //
+  ProcessLibraryConstructorList ();
   DEBUG ((EFI_D_ERROR, "GET_BOOTLOADER_PARAMETER() = 0x%lx\n", GET_BOOTLOADER_PARAMETER()));
   DEBUG ((EFI_D_ERROR, "sizeof(UINTN) = 0x%x\n", sizeof(UINTN)));
 
@@ -267,8 +278,8 @@ PayloadEntry (
   InitializeFloatingPointUnits ();
 
   // Init the region for HOB and memory allocation for this module
-  HobMemBase      = ALIGN_VALUE (FdBase+ PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
-  HobMemSize      = FixedPcdGet32 (PcdSystemMemoryUefiRegionSize);
+  HobMemBase      = 0x4000000;
+  HobMemSize      = 0x3000000;
   HobConstructor ((VOID *)HobMemBase, HobMemSize, (VOID *)HobMemBase, (VOID *)(HobMemBase + HobMemSize));
   DEBUG ((EFI_D_ERROR, "HobMemBase = 0x%x, HobMemSize = 0x%x\n", HobMemBase, HobMemSize));
 

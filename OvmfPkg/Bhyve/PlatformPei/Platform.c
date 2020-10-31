@@ -543,7 +543,15 @@ MaxCpuCountInitialization (
     ProcessorCount));
 }
 
+/**
+  Publish the FV that includes the UPL.
+  Publish the UPL required HOBs.
 
+**/
+VOID
+UplInitialization (
+  VOID
+  );
 /**
   Perform Platform PEI initialization.
 
@@ -602,6 +610,5 @@ InitializePlatform (
   AmdSevInitialize ();
   MiscInitialization ();
   InstallFeatureControlCallback ();
-
   return EFI_SUCCESS;
 }
