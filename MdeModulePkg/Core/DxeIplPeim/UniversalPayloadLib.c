@@ -195,7 +195,6 @@ LoadUniversalPayload (
   // Payload header should declare the alignment requirement
   //
   DEBUG ((DEBUG_INFO, "Payload Data Alignment: %x\n", UpldInfoHdr->ImageAlignment));
-  UpldInfoHdr->ImageAlignment = SIZE_4KB;
   if (ALIGN_POINTER (Data, UpldInfoHdr->ImageAlignment) != Data) {
     // TODO: Need to avoid wasting 1 page when alignment is 4KB.
     DataUnaligned = AllocatePages (EFI_SIZE_TO_PAGES (UpldInfoHdr->ImageLength + UpldInfoHdr->ImageAlignment - 1));
