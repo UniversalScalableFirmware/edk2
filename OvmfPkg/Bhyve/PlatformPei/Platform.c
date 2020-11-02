@@ -544,15 +544,6 @@ MaxCpuCountInitialization (
 }
 
 /**
-  Publish the FV that includes the UPL.
-  Publish the UPL required HOBs.
-
-**/
-VOID
-UplInitialization (
-  VOID
-  );
-/**
   Perform Platform PEI initialization.
 
   @param  FileHandle      Handle of the file being invoked.

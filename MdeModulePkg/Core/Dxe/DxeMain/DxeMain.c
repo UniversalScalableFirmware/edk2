@@ -220,6 +220,12 @@ GLOBAL_REMOVE_IF_UNREFERENCED EFI_LOAD_FIXED_ADDRESS_CONFIGURATION_TABLE    gLoa
 // Main entry point to the DXE Core
 //
 
+RETURN_STATUS
+EFIAPI
+BaseDebugLibSerialPortConstructor (
+  VOID
+  );
+
 /**
   Main entry point to DXE Core.
 
@@ -259,6 +265,8 @@ DxeMain (
   // Initialize Debug Agent to support source level debug in DXE phase
   //
   InitializeDebugAgent (DEBUG_AGENT_INIT_DXE_CORE, HobStart, NULL);
+  Status = BaseDebugLibSerialPortConstructor ();
+  ASSERT_RETURN_ERROR (Status);
 
   //
   // Initialize Memory Services

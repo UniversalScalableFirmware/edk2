@@ -241,6 +241,17 @@ ProcessLibraryConstructorList (
   VOID
   );
 
+UINTN
+FindFreeMemory (
+  UINTN          Size
+  )
+{
+  //
+  // TODO: Find free memory from resource HOB using DxeCore algo.
+  //
+  return 0x4000000;
+}
+
 /**
   Entry point to the C language phase of UEFI payload.
 
@@ -278,9 +289,15 @@ PayloadEntry (
   InitializeFloatingPointUnits ();
 
   // Init the region for HOB and memory allocation for this module
-  HobMemBase      = 0x4000000;
-  HobMemSize      = 0x3000000;
+  HobMemSize = 0x2000000;
+  HobMemBase = FindFreeMemory (HobMemSize);
   HobConstructor ((VOID *)HobMemBase, HobMemSize, (VOID *)HobMemBase, (VOID *)(HobMemBase + HobMemSize));
+  {
+    EFI_PEI_HOB_POINTERS  Hobs;
+    Hobs.Raw = (UINT8 *) HobMemBase;
+    // TODO: Update MemoryTop to include memory allocation from Bootloader
+    Hobs.HandoffInformationTable->EfiMemoryTop = 0x8000000;
+  }
   DEBUG ((EFI_D_ERROR, "HobMemBase = 0x%x, HobMemSize = 0x%x\n", HobMemBase, HobMemSize));
 
   // Build HOB based on information from Bootloader
@@ -290,7 +307,7 @@ PayloadEntry (
   }
 
   // The UEFI payload FV
-  BuildMemoryAllocationHob (FdBase, PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
+  // BuildMemoryAllocationHob (FdBase, PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
 
   // Load the DXE Core
   Status = LoadDxeCore (FdBase, &DxeCoreEntryPoint);

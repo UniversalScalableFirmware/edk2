@@ -91,7 +91,7 @@ LoadUniversalPayload (
 
 **/
 UPLD_INFO_HEADER *
-PrepareUniversalPayload (
+LocateUniversalPayload (
   VOID
   )
 {
@@ -484,7 +484,7 @@ DxeLoadCore (
     UINT32                            PldMachine;
     UINT8                             *PldData;
 
-    Pld = PrepareUniversalPayload ();
+    Pld = LocateUniversalPayload ();
     ASSERT (Pld != NULL);
 
     LoadUniversalPayload (Pld, &PldData, &PldEntry, &PldMachine);

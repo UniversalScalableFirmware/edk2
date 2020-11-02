@@ -1264,7 +1264,6 @@ PeCoffLoaderLoadImage (
   // Read the entire PE/COFF or TE header into memory
   //
   if (!(ImageContext->IsTeImage)) {
-  DEBUG ((DEBUG_INFO, "ImageRead(%d) = %p\n", __LINE__, ImageContext->ImageRead));
     Status = ImageContext->ImageRead (
                             ImageContext->Handle,
                             0,
@@ -1272,16 +1271,7 @@ PeCoffLoaderLoadImage (
                             (VOID *) (UINTN) ImageContext->ImageAddress
                             );
 
-    DEBUG ((DEBUG_INFO, "Handle / ImageAddress / ImageContext->SizeOfHeaders = %p / %lx / %x\n", ImageContext->Handle, ImageContext->ImageAddress, ImageContext->SizeOfHeaders));
-
-        Hdr.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)((UINTN)ImageContext->Handle + ImageContext->PeCoffHeaderOffset);
-        DEBUG ((DEBUG_INFO, "%d %a\n", __LINE__, ImageContext->Handle));
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
-
     Hdr.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)((UINTN)ImageContext->ImageAddress + ImageContext->PeCoffHeaderOffset);
-        DEBUG ((DEBUG_INFO, "%d %a\n", __LINE__, ImageContext->ImageAddress));
-
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
     FirstSection = (EFI_IMAGE_SECTION_HEADER *) (
                       (UINTN)ImageContext->ImageAddress +
                       ImageContext->PeCoffHeaderOffset +
@@ -1313,7 +1303,6 @@ PeCoffLoaderLoadImage (
     return RETURN_LOAD_ERROR;
   }
 
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
   //
   // Load each section of the image
   //
@@ -1333,7 +1322,6 @@ PeCoffLoaderLoadImage (
     Base = PeCoffLoaderImageAddress (ImageContext, Section->VirtualAddress, TeStrippedOffset);
     End  = PeCoffLoaderImageAddress (ImageContext, Section->VirtualAddress + Section->Misc.VirtualSize - 1, TeStrippedOffset);
 
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
     //
     // If the size of the section is non-zero and the base address or end address resolved to 0, then fail.
     //
@@ -1342,7 +1330,6 @@ PeCoffLoaderLoadImage (
       return RETURN_LOAD_ERROR;
     }
 
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
     if (Section->SizeOfRawData > 0) {
       Status = ImageContext->ImageRead (
                               ImageContext->Handle,
@@ -1356,7 +1343,6 @@ PeCoffLoaderLoadImage (
       }
     }
 
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
     //
     // If raw size is less then virtual size, zero fill the remaining
     //
@@ -1365,7 +1351,6 @@ PeCoffLoaderLoadImage (
       ZeroMem (Base + Size, Section->Misc.VirtualSize - Size);
     }
 
-      DEBUG ((DEBUG_INFO, "%d PE+.AddressOfEntryPoint %x\n", __LINE__, Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
     //
     // Next Section
     //
@@ -1383,7 +1368,6 @@ PeCoffLoaderLoadImage (
       //
       // Use PE32 offset
       //
-      DEBUG ((DEBUG_INFO, "PE.AddressOfEntryPoint = %lx / %x\n", ImageContext->ImageAddress, Hdr.Pe32->OptionalHeader.AddressOfEntryPoint));
       ImageContext->EntryPoint = (PHYSICAL_ADDRESS)(UINTN)PeCoffLoaderImageAddress (
                                                             ImageContext,
                                                             (UINTN)Hdr.Pe32->OptionalHeader.AddressOfEntryPoint,
@@ -1393,7 +1377,6 @@ PeCoffLoaderLoadImage (
       //
       // Use PE32+ offset
       //
-      DEBUG ((DEBUG_INFO, "PE+.AddressOfEntryPoint %x\n", Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint));
       ImageContext->EntryPoint = (PHYSICAL_ADDRESS)(UINTN)PeCoffLoaderImageAddress (
                                                             ImageContext,
                                                             (UINTN)Hdr.Pe32Plus->OptionalHeader.AddressOfEntryPoint,

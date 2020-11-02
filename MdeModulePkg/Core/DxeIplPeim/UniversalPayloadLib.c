@@ -151,6 +151,7 @@ LoadUniversalPayload (
   UPLD_RELOC_HEADER       *UpldRelocHdr;
   CHAR8                   ImageId[9];
   UINT8                   *Data;
+  UINT8                   *DataUnaligned;
 
   if (UpldInfoHdr->CommonHeader.Identifier != UPLD_IMAGE_HEADER_ID) {
     DEBUG ((DEBUG_ERROR, "UPayload image format is invalid !\n"));
@@ -190,8 +191,16 @@ LoadUniversalPayload (
     return EFI_ABORTED;
   }
 
-  if (ALIGN_POINTER (Data, SIZE_4KB) != Data) {
-    Data = AllocatePages (EFI_SIZE_TO_PAGES (UpldInfoHdr->ImageLength));
+  //
+  // Payload header should declare the alignment requirement
+  //
+  DEBUG ((DEBUG_INFO, "Payload Data Alignment: %x\n", UpldInfoHdr->ImageAlignment));
+  UpldInfoHdr->ImageAlignment = SIZE_4KB;
+  if (ALIGN_POINTER (Data, UpldInfoHdr->ImageAlignment) != Data) {
+    // TODO: Need to avoid wasting 1 page when alignment is 4KB.
+    DataUnaligned = AllocatePages (EFI_SIZE_TO_PAGES (UpldInfoHdr->ImageLength + UpldInfoHdr->ImageAlignment - 1));
+    Data = ALIGN_POINTER (DataUnaligned, UpldInfoHdr->ImageAlignment);
+    DEBUG ((DEBUG_INFO, "Relocate Payload Data from %p to %p, Length = %x\n", (UINT8 *)UpldInfoHdr + UpldInfoHdr->ImageOffset, Data, UpldInfoHdr->ImageLength));
     CopyMem (Data, (UINT8 *)UpldInfoHdr + UpldInfoHdr->ImageOffset, UpldInfoHdr->ImageLength);
   }
   
