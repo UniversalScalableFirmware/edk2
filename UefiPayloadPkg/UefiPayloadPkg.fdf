@@ -79,8 +79,14 @@ READ_ENABLED_CAP   = TRUE
 READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
+FvNameGuid         = A7008BCD-7D3E-4692-A5C4-D31DF67E2994
 
-
+APRIORI DXE {
+  INF MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
+  INF MdeModulePkg/Universal/ReportStatusCodeRouter/RuntimeDxe/ReportStatusCodeRouterRuntimeDxe.inf
+  INF MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
+  INF MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
+}
 #
 # DXE Phase modules
 #
@@ -93,7 +99,7 @@ INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
 INF UefiCpuPkg/CpuDxe/CpuDxe.inf
 INF MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 INF MdeModulePkg/Application/UiApp/UiApp.inf
-INF PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
+#INF PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
 INF MdeModulePkg/Universal/Metronome/Metronome.inf
 INF MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
 INF MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
@@ -116,14 +122,20 @@ INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 # PCI Support
 #
 INF MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
-INF MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
+
+# Use the one from PPL (Platform Payload), nicer solution is this driver doesn't run when PciEnumeration is not done in BL.
+# POC phase just comments this out.
+# BL -> UPL + PPL
+#   PPL is provided the same vendor who provides BL.
+#   UPL is provided by a UPL core team.
+# INF MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf # TOOD: Need to way to leave this driver in UPL but use the one in PPL
 
 #
 # ISA Support
 #
 INF MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
-INF OvmfPkg/SioBusDxe/SioBusDxe.inf
+INF OvmfPkg/SioBusDxe/SioBusDxe.inf # TODO: Strange to use the driver from ovmf
 INF MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
 !endif
 

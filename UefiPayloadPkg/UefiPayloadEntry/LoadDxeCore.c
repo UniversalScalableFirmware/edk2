@@ -273,10 +273,14 @@ LoadDxeCore (
   }
 
   //
-  // Report DXE FV to DXE core
+  // Report PLD FV to DXE core
   //
   DEBUG ((DEBUG_INFO, "Report DXE FV: %p / %x\n", DxeCoreFv, DxeCoreFv->FvLength));
   BuildFvHob ((EFI_PHYSICAL_ADDRESS) (UINTN) DxeCoreFv, DxeCoreFv->FvLength);
+
+  BuildFvHob (0x800000 + 0x100000, 0xC00000);
+    //(VOID *)(UINTN) PcdGet32 (PcdOvmfDxeMemFvBase),
+    //PcdGet32 (PcdOvmfDxeMemFvSize),
 
   //
   // Find DXE core file from DXE FV

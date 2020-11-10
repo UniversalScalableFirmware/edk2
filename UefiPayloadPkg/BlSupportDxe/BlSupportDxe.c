@@ -47,7 +47,7 @@ ReserveResourceInGcd (
         Length
         ));
     }
-    ASSERT_EFI_ERROR (Status);
+    //ASSERT_EFI_ERROR (Status);
     Status = gDS->AllocateMemorySpace (
                     EfiGcdAllocateAddress,
                     GcdType,
@@ -64,7 +64,7 @@ ReserveResourceInGcd (
                     BaseAddress,
                     Length
                     );
-    ASSERT_EFI_ERROR (Status);
+    //ASSERT_EFI_ERROR (Status);
     Status = gDS->AllocateIoSpace (
                     EfiGcdAllocateAddress,
                     GcdType,
