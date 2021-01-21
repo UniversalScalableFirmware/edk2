@@ -39,3 +39,6 @@
   DevicePathLib
   MemoryAllocationLib
   PciLib
+
+[Pcd]
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress

@@ -95,6 +95,9 @@ AdjustRootBridgeResource (
   //
   Mask        = 0xFFFFFULL;
   Mem->Limit  = ((Mem->Limit + Mask) & ~Mask) - 1;
+  if (Mem->Limit > PcdGet64 (PcdPciExpressBaseAddress)) {
+    Mem->Limit = PcdGet64 (PcdPciExpressBaseAddress) - 1;
+  }
   if (Mem->Base != MAX_UINT64) {
     Mem->Base &= ~Mask;
   }
