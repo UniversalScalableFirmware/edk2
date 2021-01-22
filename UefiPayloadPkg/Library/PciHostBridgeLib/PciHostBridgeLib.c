@@ -2,7 +2,7 @@
   Library instance of PciHostBridgeLib library class for coreboot.
 
   Copyright (C) 2016, Red Hat, Inc.
-  Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2016 - 2020, Intel Corporation. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -19,6 +19,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PciHostBridgeLib.h>
 #include <Library/PciLib.h>
+#include <Library/HobLib.h>
 
 #include "PciHostBridge.h"
 
@@ -48,6 +49,33 @@ CB_PCI_ROOT_BRIDGE_DEVICE_PATH mRootBridgeDevicePathTemplate = {
   }
 };
 
+/**
+  Get a pointer of PCI Root Bridge Info Hob
+
+  @retval                      Pointer of PCI Root Bridge Info Hob
+
+**/
+STATIC
+PCI_ROOT_BRIDGE_INFO_HOB *
+GetPciRootBridgeInfoHob (
+  VOID
+  )
+{
+  EFI_HOB_GUID_TYPE             *GuidHob;
+  PCI_ROOT_BRIDGE_INFO_HOB      *PciRootBridgeInfo;
+
+  //
+  // Find PCI Root Bridge Info hob
+  //
+  GuidHob = GetFirstGuidHob (&gLoaderPciRootBridgeInfoGuid);
+  if (GuidHob != NULL) {
+    PciRootBridgeInfo = (PCI_ROOT_BRIDGE_INFO_HOB *) GET_GUID_HOB_DATA (GuidHob);
+  } else {
+    PciRootBridgeInfo = NULL;
+  }
+
+  return PciRootBridgeInfo;
+}
 
 /**
   Initialize a PCI_ROOT_BRIDGE structure.
@@ -161,9 +189,16 @@ PciHostBridgeGetRootBridges (
   UINTN *Count
 )
 {
-  return ScanForRootBridges (Count);
-}
+  PCI_ROOT_BRIDGE_INFO_HOB *PciRootBridgeInfo;
 
+  PciRootBridgeInfo = GetPciRootBridgeInfoHob ();
+  if (PciRootBridgeInfo != NULL) {
+    DEBUG ((DEBUG_INFO, "Use RootBridge info from bootloader HOB\n"));
+    return ScanForRootBridgesFromHob (PciRootBridgeInfo, Count);
+  } else {
+    return ScanForRootBridges (Count);
+  }
+}
 
 /**
   Free the root bridge instances array returned from
