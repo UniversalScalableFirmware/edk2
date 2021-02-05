@@ -59,34 +59,38 @@ GetPciRootBridgeResourceRanges (
   }
 
   for (Index = 0; Index < PCI_MAX_BAR; Index++) {
-    if (PciRootBridgeInfo->Entry[EntryIndex].Resource[Index].ResLength > 0) {
-      switch (Index) {
-        case 0x0:
-        case 0x1:
-          Aperture = Io;
-          break;
-        case 0x2:
-          Aperture = Mem;
-          break;
-        case 0x3:
-          Aperture = PMem;
-          break;
-        case 0x4:
-          Aperture = MemAbove4G;
-          break;
-        case 0x5:
-          Aperture = PMemAbove4G;
-          break;
-        default:
-          Aperture = NULL;
-          break;
-      }
+    switch (Index) {
+      case 0x0:
+      case 0x1:
+        Aperture = Io;
+        break;
+      case 0x2:
+        Aperture = Mem;
+        break;
+      case 0x3:
+        Aperture = PMem;
+        break;
+      case 0x4:
+        Aperture = MemAbove4G;
+        break;
+      case 0x5:
+        Aperture = PMemAbove4G;
+        break;
+      default:
+        Aperture = NULL;
+        break;
+    }
 
-      if (Aperture != NULL) {
-        Aperture->Base  = PciRootBridgeInfo->Entry[EntryIndex].Resource[Index].ResBase;
+    if (Aperture != NULL) {
+      Aperture->Base  = PciRootBridgeInfo->Entry[EntryIndex].Resource[Index].ResBase;
+      if (PciRootBridgeInfo->Entry[EntryIndex].Resource[Index].ResLength == 0) {
+        Aperture->Base  = MAX_UINT64;
+        Aperture->Limit = 0;
+      } else {
         Aperture->Limit = Aperture->Base + PciRootBridgeInfo->Entry[EntryIndex].Resource[Index].ResLength - 1;
       }
     }
+
   }
 
   return EFI_SUCCESS;
