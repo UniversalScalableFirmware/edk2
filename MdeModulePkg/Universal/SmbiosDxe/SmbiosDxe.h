@@ -1,7 +1,7 @@
 /** @file
   This code supports the implementation of the Smbios protocol
 
-Copyright (c) 2009 - 2018, Intel Corporation. All rights reserved.<BR>
+Copyright (c) 2009 - 2021, Intel Corporation. All rights reserved.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -24,6 +24,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/PcdLib.h>
+#include <Library/HobLib.h>
+#include <Guid/SmBiosTableHob.h>
 
 #define SMBIOS_INSTANCE_SIGNATURE SIGNATURE_32 ('S', 'B', 'i', 's')
 typedef struct {
