@@ -1,7 +1,7 @@
 /** @file
   ACPI Table Protocol Implementation
 
-  Copyright (c) 2006 - 2018, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2006 - 2021, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2016, Linaro Ltd. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -30,6 +30,7 @@ STATIC EFI_ALLOCATE_TYPE      mAcpiTableAllocType;
   @param  Table                     Table to add.
   @param  Checksum                  Does the table require checksumming.
   @param  Version                   The version of the list to add the table to.
+  @param  IsFromHob                 True, if add Apci Table from Hob List.
   @param  Handle                    Pointer for returning the handle.
 
   @return EFI_SUCCESS               The function completed successfully.
@@ -44,6 +45,7 @@ AddTableToList (
   IN VOID                                 *Table,
   IN BOOLEAN                              Checksum,
   IN EFI_ACPI_TABLE_VERSION               Version,
+  IN BOOLEAN                              IsFromHob,
   OUT UINTN                               *Handle
   );
 
@@ -238,6 +240,7 @@ InstallAcpiTable (
              AcpiTableBufferConst,
              TRUE,
              Version,
+             FALSE,
              TableKey
              );
   if (!EFI_ERROR (Status)) {
@@ -472,6 +475,7 @@ FreeTableMemory (
   @param  Table                     Table to add.
   @param  Checksum                  Does the table require checksumming.
   @param  Version                   The version of the list to add the table to.
+  @param  IsFromHob                 True, if add Apci Table from Hob List.
   @param  Handle                    Pointer for returning the handle.
 
   @return EFI_SUCCESS               The function completed successfully.
@@ -487,6 +491,7 @@ AddTableToList (
   IN VOID                                 *Table,
   IN BOOLEAN                              Checksum,
   IN EFI_ACPI_TABLE_VERSION               Version,
+  IN BOOLEAN                              IsFromHob,
   OUT UINTN                               *Handle
   )
 {
@@ -552,13 +557,16 @@ AddTableToList (
     // could be updated by OS present agent. For example, BufferPtrAddress in
     // SMM communication ACPI table.
     //
-    ASSERT ((EFI_PAGE_SIZE % 64) == 0);
-    Status = gBS->AllocatePages (
-                    AllocateMaxAddress,
-                    EfiACPIMemoryNVS,
-                    EFI_SIZE_TO_PAGES (CurrentTableList->TableSize),
-                    &AllocPhysAddress
-                    );
+    if (IsFromHob){
+      AllocPhysAddress = (UINTN)Table;
+    } else {
+      Status = gBS->AllocatePages (
+                      AllocateMaxAddress,
+                      EfiACPIMemoryNVS,
+                      EFI_SIZE_TO_PAGES (CurrentTableList->TableSize),
+                      &AllocPhysAddress
+                      );
+    }
   } else if (mAcpiTableAllocType == AllocateAnyPages) {
     //
     // If there is no allocation limit, there is also no need to use page
@@ -1689,6 +1697,117 @@ ChecksumCommonTables (
   return EFI_SUCCESS;
 }
 
+/**
+  This function will find gPldAcpiTableGuid Guid Hob, and install Acpi table from it.
+
+  @param  AcpiTableInstance  Protocol instance private data.
+
+  @return EFI_SUCCESS        The function completed successfully.
+  @return EFI_NOT_FOUND      The function doesn't find the gEfiAcpiTableGuid Guid Hob.
+  @return EFI_ABORTED        The function could not complete successfully.
+
+**/
+EFI_STATUS
+InstallAcpiTableFromHob (
+  EFI_ACPI_TABLE_INSTANCE                   *AcpiTableInstance
+  )
+{
+  EFI_HOB_GUID_TYPE                             *GuidHob;
+  EFI_ACPI_TABLE_VERSION                        Version;
+  EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER  *Rsdp;
+  EFI_ACPI_DESCRIPTION_HEADER                   *Rsdt;
+  EFI_ACPI_DESCRIPTION_HEADER                   *ChildTable;
+  UINT64                                        ChildTableAddress;
+  UINTN                                         Count;
+  UINTN                                         Index;
+  UINTN                                         TableKey;
+  EFI_STATUS                                    Status;
+  UINTN                                         EntrySize;
+  PLD_ACPI_TABLE_HOB                            *AcpiTableAdress;
+
+  TableKey = 0;
+  Version = PcdGet32 (PcdAcpiExposedTableVersions);
+
+  //
+  // HOB only contains the ACPI table in 2.0+ format.
+  //
+  GuidHob = GetFirstGuidHob (&gPldAcpiTableGuid);
+  if (GuidHob == NULL) {
+    return EFI_NOT_FOUND;
+  }
+  AcpiTableAdress = (PLD_ACPI_TABLE_HOB *) GET_GUID_HOB_DATA (GuidHob);
+  Rsdp = (EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER *) (UINTN) (AcpiTableAdress->Rsdp);
+
+  //
+  // An ACPI-compatible OS must use the XSDT if present.
+  // It shouldn't happen that XsdtAddress points beyond 4G range in 32-bit environment.
+  //
+  ASSERT ((UINTN) Rsdp->XsdtAddress == Rsdp->XsdtAddress);
+
+  EntrySize = sizeof (UINT64);
+  Rsdt = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) Rsdp->XsdtAddress;
+  if (Rsdt == NULL) {
+    //
+    // XsdtAddress is zero, then we use Rsdt which has 32 bit entry
+    //
+    Rsdt = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) Rsdp->RsdtAddress;
+    EntrySize = sizeof (UINT32);
+  }
+  Count = (Rsdt->Length - sizeof (EFI_ACPI_DESCRIPTION_HEADER)) / EntrySize;
+
+  for (Index = 0; Index < Count; Index++){
+    ChildTableAddress = 0;
+    CopyMem (&ChildTableAddress, (UINT8 *) (Rsdt + 1) + EntrySize * Index, EntrySize);
+    //
+    // If the address is of UINT64 while this module runs at 32 bits,
+    // make sure the upper bits are all-zeros.
+    //
+    ASSERT (ChildTableAddress == (UINTN) ChildTableAddress);
+
+    ChildTable = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) ChildTableAddress;
+    Status = AddTableToList (
+               AcpiTableInstance,
+               ChildTable,
+               TRUE,
+               Version,
+               TRUE,
+               &TableKey
+               );
+    if (ChildTable->Signature == EFI_ACPI_3_0_FIXED_ACPI_DESCRIPTION_TABLE_SIGNATURE){
+      //
+      // Add the FACS and DSDT tables if it is not NULL.
+      //
+      if (((EFI_ACPI_3_0_FIXED_ACPI_DESCRIPTION_TABLE *) ChildTable)->FirmwareCtrl != 0) {
+        Status = AddTableToList (
+                  AcpiTableInstance,
+                  (VOID *) (UINTN) ((EFI_ACPI_3_0_FIXED_ACPI_DESCRIPTION_TABLE *) ChildTable)->FirmwareCtrl,
+                  TRUE,
+                  Version,
+                  TRUE,
+                  &TableKey
+                  );
+      }
+      if (((EFI_ACPI_3_0_FIXED_ACPI_DESCRIPTION_TABLE *) ChildTable)->Dsdt != 0) {
+        Status = AddTableToList (
+                   AcpiTableInstance,
+                   (VOID *) (UINTN) ((EFI_ACPI_3_0_FIXED_ACPI_DESCRIPTION_TABLE *) ChildTable)->Dsdt,
+                   TRUE,
+                   Version,
+                   TRUE,
+                   &TableKey
+                   );
+      }
+    }
+  }
+  if (!EFI_ERROR (Status)) {
+    Status = PublishTables (
+               AcpiTableInstance,
+               Version
+               );
+  }
+  ASSERT_EFI_ERROR (Status);
+  return Status;
+}
 
 /**
   Constructor for the ACPI table protocol.  Initializes instance
@@ -1917,6 +2036,8 @@ AcpiTableAcpiTableConstructor (
   AcpiTableInstance->Xsdt->Length           = AcpiTableInstance->Xsdt->Length + sizeof(UINT64);
 
   ChecksumCommonTables (AcpiTableInstance);
+
+  InstallAcpiTableFromHob (AcpiTableInstance);
 
   //
   // Completed successfully

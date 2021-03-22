@@ -1,7 +1,7 @@
 /** @file
   ACPI Table Protocol Driver
 
-  Copyright (c) 2006 - 2018, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2006 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -24,6 +24,8 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/PcdLib.h>
+#include <Library/HobLib.h>
+#include <Guid/AcpiTableHob.h>
 
 //
 // Statements that include other files
