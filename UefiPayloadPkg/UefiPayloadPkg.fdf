@@ -3,7 +3,7 @@
 #
 # Provides drivers and definitions to create uefi payload for bootloaders.
 #
-# Copyright (c) 2014 - 2020, Intel Corporation. All rights reserved.<BR>
+# Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
@@ -52,7 +52,12 @@ READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
-INF UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+  INF UefiPayloadPkg/UniversalPayloadEntry/UniversalPayloadEntry.inf
+!else
+  INF UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+!endif
 
 FILE FV_IMAGE = 4E35FD93-9C72-4c15-8C4B-E77F1DB2D793 {
     SECTION FV_IMAGE = DXEFV
