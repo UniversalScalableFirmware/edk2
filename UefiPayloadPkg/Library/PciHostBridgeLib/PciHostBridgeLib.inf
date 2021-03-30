@@ -2,7 +2,7 @@
 #  Library instance of PciHostBridgeLib library class for coreboot.
 #
 #  Copyright (C) 2016, Red Hat, Inc.
-#  Copyright (c) 2016 - 2018, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2016 - 2021, Intel Corporation. All rights reserved.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -32,6 +32,7 @@
 [Packages]
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib
@@ -39,3 +40,9 @@
   DevicePathLib
   MemoryAllocationLib
   PciLib
+
+[Guids]
+  gPldPciRootBridgeInfoGuid
+
+[Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration
