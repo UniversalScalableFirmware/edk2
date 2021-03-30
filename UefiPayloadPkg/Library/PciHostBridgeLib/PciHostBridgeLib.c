@@ -2,7 +2,7 @@
   Library instance of PciHostBridgeLib library class for coreboot.
 
   Copyright (C) 2016, Red Hat, Inc.
-  Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2016 - 2021, Intel Corporation. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -19,6 +19,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PciHostBridgeLib.h>
 #include <Library/PciLib.h>
+#include <Library/HobLib.h>
 
 #include "PciHostBridge.h"
 
@@ -47,7 +48,6 @@ CB_PCI_ROOT_BRIDGE_DEVICE_PATH mRootBridgeDevicePathTemplate = {
     }
   }
 };
-
 
 /**
   Initialize a PCI_ROOT_BRIDGE structure.
@@ -145,6 +145,27 @@ InitRootBridge (
   return EFI_SUCCESS;
 }
 
+/**
+  Initialize DevicePath for a PCI_ROOT_BRIDGE.
+  @param[in] HID               HID for device path
+  @param[in] UID               UID for device path
+
+  @retval A pointer to the new created device patch.
+**/
+EFI_DEVICE_PATH_PROTOCOL *
+CreateRootBridgeDevicePath (
+  IN     UINT32                   HID,
+  IN     UINT32                   UID
+)
+{
+  CB_PCI_ROOT_BRIDGE_DEVICE_PATH *DevicePath;
+  DevicePath = AllocateCopyPool (sizeof (mRootBridgeDevicePathTemplate),
+                                 &mRootBridgeDevicePathTemplate);
+  ASSERT (DevicePath != NULL);
+  DevicePath->AcpiDevicePath.HID = HID;
+  DevicePath->AcpiDevicePath.UID = UID;
+  return (EFI_DEVICE_PATH_PROTOCOL *)DevicePath;
+}
 
 /**
   Return all the root bridge instances in an array.
@@ -161,9 +182,23 @@ PciHostBridgeGetRootBridges (
   UINTN *Count
 )
 {
+  PLD_PCI_ROOT_BRIDGE_INFO_HOB  *PciRootBridgeInfo;
+  EFI_HOB_GUID_TYPE             *GuidHob;
+  //
+  // Find PLD PCI Root Bridge Info hob
+  //
+  GuidHob = GetFirstGuidHob (&gPldPciRootBridgeInfoGuid);
+  if (GuidHob != NULL) {
+    PciRootBridgeInfo = (PLD_PCI_ROOT_BRIDGE_INFO_HOB *) GET_GUID_HOB_DATA (GuidHob);
+    //
+    // The count of Root Bridge must be not large than the maximum Root Bridge number that the Hob can carry
+    //
+    if (PciRootBridgeInfo->Count <= (GuidHob->Header.HobLength - sizeof(PLD_PCI_ROOT_BRIDGE_INFO_HOB)) / sizeof(PLD_PCI_ROOT_BRIDGE)) {
+      return RetrieveRootBridgeInfoFromHob (PciRootBridgeInfo, Count);
+    }
+  }
   return ScanForRootBridges (Count);
 }
-
 
 /**
   Free the root bridge instances array returned from
