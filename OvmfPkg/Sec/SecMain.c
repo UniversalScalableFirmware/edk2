@@ -334,9 +334,6 @@ DecompressMemFvs (
   VOID                              *ScratchBuffer;
   EFI_COMMON_SECTION_HEADER         *FvSection;
   EFI_FIRMWARE_VOLUME_HEADER        *PeiMemFv;
-  EFI_FIRMWARE_VOLUME_HEADER        *DxeMemFv;
-  UINT32                            FvHeaderSize;
-  UINT32                            FvSectionSize;
 
   FvSection = (EFI_COMMON_SECTION_HEADER*) NULL;
 
@@ -362,7 +359,7 @@ DecompressMemFvs (
     return Status;
   }
 
-  OutputBuffer = (VOID*) ((UINT8*)(UINTN) PcdGet32 (PcdOvmfDxeMemFvBase) + SIZE_1MB);
+  OutputBuffer = (VOID*) ((UINT8*)(UINTN) PcdGet32 (PcdOvmfPeiMemFvBase) + SIZE_1MB);
   ScratchBuffer = ALIGN_POINTER ((UINT8*) OutputBuffer + OutputBufferSize, SIZE_1MB);
 
   DEBUG ((DEBUG_VERBOSE, "%a: OutputBuffer@%p+0x%x ScratchBuffer@%p+0x%x "
@@ -408,38 +405,6 @@ DecompressMemFvs (
     return EFI_VOLUME_CORRUPTED;
   }
 
-  Status = FindFfsSectionInstance (
-             OutputBuffer,
-             OutputBufferSize,
-             EFI_SECTION_FIRMWARE_VOLUME_IMAGE,
-             1,
-             &FvSection
-             );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Unable to find DXE FV section\n"));
-    return Status;
-  }
-
-  ASSERT (FvSection->Type == EFI_SECTION_FIRMWARE_VOLUME_IMAGE);
-
-  if (IS_SECTION2 (FvSection)) {
-    FvSectionSize = SECTION2_SIZE (FvSection);
-    FvHeaderSize = sizeof (EFI_COMMON_SECTION_HEADER2);
-  } else {
-    FvSectionSize = SECTION_SIZE (FvSection);
-    FvHeaderSize = sizeof (EFI_COMMON_SECTION_HEADER);
-  }
-
-  ASSERT (FvSectionSize == (PcdGet32 (PcdOvmfDxeMemFvSize) + FvHeaderSize));
-
-  DxeMemFv = (EFI_FIRMWARE_VOLUME_HEADER*)(UINTN) PcdGet32 (PcdOvmfDxeMemFvBase);
-  CopyMem (DxeMemFv, (VOID*) ((UINTN)FvSection + FvHeaderSize), PcdGet32 (PcdOvmfDxeMemFvSize));
-
-  if (DxeMemFv->Signature != EFI_FVH_SIGNATURE) {
-    DEBUG ((DEBUG_ERROR, "Extracted FV at %p does not have FV header signature\n", DxeMemFv));
-    CpuDeadLoop ();
-    return EFI_VOLUME_CORRUPTED;
-  }
 
   *Fv = PeiMemFv;
   return EFI_SUCCESS;

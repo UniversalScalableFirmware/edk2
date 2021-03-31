@@ -47,7 +47,7 @@ ReserveResourceInGcd (
         Length
         ));
     }
-    ASSERT_EFI_ERROR (Status);
+    //ASSERT_EFI_ERROR (Status);
     Status = gDS->AllocateMemorySpace (
                     EfiGcdAllocateAddress,
                     GcdType,

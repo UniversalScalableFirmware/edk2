@@ -28,22 +28,10 @@
 #                      object to 128 bytes. See also the "guided.dummy.txt"
 #                      file in the same directory.
 #
-#                   4  EFI_COMMON_SECTION_HEADER, stating size 12 (0xC) and
-#                      type 0x19 (EFI_SECTION_RAW). The purpose of this section
-#                      is to pad the start of DXEFV to 16 bytes.
-#                   8  Zero bytes (padding).
 #
-#                   4  EFI_COMMON_SECTION_HEADER, stating size
-#                      (PcdOvmfDxeMemFvSize + 4), and type 0x17
-#                      (EFI_SECTION_FIRMWARE_VOLUME_IMAGE).
-# PcdOvmfDxeMemFvSize  DXEFV. Note that the above sizes pad the offset of this
-#                      object to 16 bytes. See also the "guided.dummy.txt" file
-#                      in the same directory.
-#
-# The total size after decompression is (128 + PcdOvmfPeiMemFvSize + 16 +
-# PcdOvmfDxeMemFvSize).
+# The total size after decompression is (128 + PcdOvmfPeiMemFvSize).
 
-DEFINE OUTPUT_SIZE = (128 + gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvSize + 16 + gUefiOvmfPkgTokenSpaceGuid.PcdOvmfDxeMemFvSize)
+DEFINE OUTPUT_SIZE = (128 + gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvSize)
 
 # LzmaCustomDecompressLib uses a constant scratch buffer size of 64KB; see
 # SCRATCH_BUFFER_REQUEST_SIZE in
@@ -51,12 +39,12 @@ DEFINE OUTPUT_SIZE = (128 + gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvSize + 16 
 
 DEFINE DECOMP_SCRATCH_SIZE = 0x00010000
 
-# Note: when we use PcdOvmfDxeMemFvBase in this context, BaseTools have not yet
+# Note: when we use PcdOvmfPeiMemFvBase in this context, BaseTools have not yet
 # offset it with MEMFD's base address. For that reason we have to do it manually.
 #
 # The calculation below mirrors DecompressMemFvs() [OvmfPkg/Sec/SecMain.c].
 
-DEFINE OUTPUT_BASE                   = ($(MEMFD_BASE_ADDRESS) + gUefiOvmfPkgTokenSpaceGuid.PcdOvmfDxeMemFvBase + 0x00100000)
+DEFINE OUTPUT_BASE                   = ($(MEMFD_BASE_ADDRESS) + gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvBase + 0x00100000)
 DEFINE DECOMP_SCRATCH_BASE_UNALIGNED = ($(OUTPUT_BASE) + $(OUTPUT_SIZE))
 DEFINE DECOMP_SCRATCH_BASE_ALIGNMENT = 0x000FFFFF
 DEFINE DECOMP_SCRATCH_BASE_MASK      = 0xFFF00000
