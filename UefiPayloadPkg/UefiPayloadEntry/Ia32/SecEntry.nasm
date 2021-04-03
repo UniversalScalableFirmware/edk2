@@ -33,11 +33,18 @@ ASM_PFX(_ModuleEntryPoint):
   mov   esp, FixedPcdGet32 (PcdPayloadStackTop)
 
   ;
+  ; Change code to use bootloader stack late.
   ; Push the bootloader parameter address onto new stack
   ;
+  ; used to save serial port info
   push  0
   push  eax
-
+  push  0
+  push  0
+  push  0
+  push  0
+  push  0
+  push  eax
   ;
   ; Call into C code
   ;

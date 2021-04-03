@@ -37,7 +37,7 @@
 
 [Guids]
   gUefiSystemTableInfoGuid
-  gUefiSerialPortInfoGuid
+  gSblSerialPortInfoGuid
   gLoaderMemoryMapInfoGuid
   gEfiGraphicsInfoHobGuid
   gEfiGraphicsDeviceInfoHobGuid

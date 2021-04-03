@@ -16,8 +16,9 @@
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__
 
-#define GET_BOOTLOADER_PARAMETER()      (*(UINTN *)(UINTN)(PcdGet32(PcdPayloadStackTop) - sizeof(UINT64)))
-#define SET_BOOTLOADER_PARAMETER(Value) GET_BOOTLOADER_PARAMETER()=Value
+#define GET_BOOTLOADER_PARAMETER(num)         (*(UINTN *)(UINTN)(PcdGet32(PcdPayloadStackTop) - num * sizeof(UINT64)))
+#define GET_BOOTLOADER_PARAMETER_ADDR(num)    ((UINTN *)(UINTN)(PcdGet32(PcdPayloadStackTop) - num * sizeof(UINT64)))
+#define SET_BOOTLOADER_PARAMETER(num, Value)  GET_BOOTLOADER_PARAMETER(num) = Value
 
 typedef RETURN_STATUS \
         (*BL_MEM_INFO_CALLBACK) (MEMROY_MAP_ENTRY *MemoryMapEntry, VOID *Param);
