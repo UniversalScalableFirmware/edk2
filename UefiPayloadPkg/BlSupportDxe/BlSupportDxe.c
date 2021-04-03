@@ -99,9 +99,10 @@ BlDxeEntryPoint (
 {
   EFI_STATUS Status;
   EFI_HOB_GUID_TYPE          *GuidHob;
-  SYSTEM_TABLE_INFO          *SystemTableInfo;
   EFI_PEI_GRAPHICS_INFO_HOB  *GfxInfo;
   ACPI_BOARD_INFO            *AcpiBoardInfo;
+  ACPI_TABLE_HOB             *AcpiTableHob;
+  SMBIOS_TABLE_HOB           *SmbiosTable;
 
   Status = EFI_SUCCESS;
   //
@@ -114,27 +115,24 @@ BlDxeEntryPoint (
   ASSERT_EFI_ERROR (Status);
 
   //
-  // Find the system table information guid hob
-  //
-  GuidHob = GetFirstGuidHob (&gUefiSystemTableInfoGuid);
-  ASSERT (GuidHob != NULL);
-  SystemTableInfo = (SYSTEM_TABLE_INFO *)GET_GUID_HOB_DATA (GuidHob);
-
-  //
   // Install Acpi Table
   //
-  if (SystemTableInfo->AcpiTableBase != 0 && SystemTableInfo->AcpiTableSize != 0) {
-    DEBUG ((DEBUG_ERROR, "Install Acpi Table at 0x%lx, length 0x%x\n", SystemTableInfo->AcpiTableBase, SystemTableInfo->AcpiTableSize));
-    Status = gBS->InstallConfigurationTable (&gEfiAcpiTableGuid, (VOID *)(UINTN)SystemTableInfo->AcpiTableBase);
+  GuidHob = GetFirstGuidHob (&gEfiAcpiTableGuid);
+  if (GuidHob != NULL) {
+    AcpiTableHob = (ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
+    DEBUG ((DEBUG_ERROR, "Install Acpi Table at 0x%lx \n", AcpiTableHob->TableAddress));
+    Status = gBS->InstallConfigurationTable (&gEfiAcpiTableGuid, (VOID *)(UINTN)AcpiTableHob->TableAddress);
     ASSERT_EFI_ERROR (Status);
   }
 
   //
   // Install Smbios Table
   //
-  if (SystemTableInfo->SmbiosTableBase != 0 && SystemTableInfo->SmbiosTableSize != 0) {
-    DEBUG ((DEBUG_ERROR, "Install Smbios Table at 0x%lx, length 0x%x\n", SystemTableInfo->SmbiosTableBase, SystemTableInfo->SmbiosTableSize));
-    Status = gBS->InstallConfigurationTable (&gEfiSmbiosTableGuid, (VOID *)(UINTN)SystemTableInfo->SmbiosTableBase);
+  GuidHob = GetFirstGuidHob (&gEfiSmbiosTableGuid);
+  if (GuidHob != NULL) {
+    SmbiosTable = (SMBIOS_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
+    DEBUG ((DEBUG_ERROR, "Install SMBIOS Table at 0x%lx \n", SmbiosTable->TableAddress));
+    Status = gBS->InstallConfigurationTable (&gEfiSmbiosTableGuid, (VOID *)(UINTN)SmbiosTable->TableAddress);
     ASSERT_EFI_ERROR (Status);
   }
 

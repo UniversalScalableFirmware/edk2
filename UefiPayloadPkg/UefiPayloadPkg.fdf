@@ -52,7 +52,11 @@ READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
-INF UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+  INF UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+!else
+  INF UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+!endif
 
 FILE FV_IMAGE = 4E35FD93-9C72-4c15-8C4B-E77F1DB2D793 {
     SECTION FV_IMAGE = DXEFV

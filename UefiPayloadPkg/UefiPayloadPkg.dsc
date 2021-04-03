@@ -25,6 +25,8 @@
   OUTPUT_DIRECTORY                    = Build/UefiPayloadPkgX64
   FLASH_DEFINITION                    = UefiPayloadPkg/UefiPayloadPkg.fdf
 
+
+  DEFINE UNIVERSAL_PAYLOAD            = FALSE
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
 
@@ -371,10 +373,19 @@
 
 !if "IA32" in $(ARCH)
   [Components.IA32]
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+    UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+!else
     UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+!endif
+
 !else
   [Components.X64]
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+    UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+!else
     UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+!endif
 !endif
 
 [Components.X64]

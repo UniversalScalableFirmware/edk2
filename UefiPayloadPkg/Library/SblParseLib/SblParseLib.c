@@ -15,6 +15,7 @@
 #include <Library/HobLib.h>
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
+#include "SblSerialPortInfoGuid.h"
 
 
 /**
@@ -35,7 +36,7 @@ GetParameterBase (
 {
   EFI_HOB_HANDOFF_INFO_TABLE          *HandoffTable;
 
-  HandoffTable = (EFI_HOB_HANDOFF_INFO_TABLE *)(UINTN) GET_BOOTLOADER_PARAMETER ();
+  HandoffTable = (EFI_HOB_HANDOFF_INFO_TABLE *)(UINTN) GET_BOOTLOADER_PARAMETER (1);
   if ((HandoffTable->Header.HobType == EFI_HOB_TYPE_HANDOFF) &&
     (HandoffTable->Header.HobLength == sizeof (EFI_HOB_HANDOFF_INFO_TABLE)) &&
     (HandoffTable->Header.Reserved == 0)) {
@@ -153,15 +154,19 @@ ParseSerialInfo (
   OUT SERIAL_PORT_INFO     *SerialPortInfo
   )
 {
-  SERIAL_PORT_INFO              *BlSerialInfo;
+  SBL_SERIAL_PORT_INFO     *BlSerialInfo;
 
-  BlSerialInfo = (SERIAL_PORT_INFO *) GetGuidHobDataFromSbl (&gUefiSerialPortInfoGuid);
+  BlSerialInfo = (SBL_SERIAL_PORT_INFO *) GetGuidHobDataFromSbl (&gSblSerialPortInfoGuid);
   if (BlSerialInfo == NULL) {
     ASSERT (FALSE);
     return RETURN_NOT_FOUND;
   }
 
-  CopyMem (SerialPortInfo, BlSerialInfo, sizeof (SERIAL_PORT_INFO));
+  SerialPortInfo->Reversion     = BlSerialInfo->Revision;
+  SerialPortInfo->UseMmio       = (BlSerialInfo->Type == PLD_SERIAL_TYPE_MEMORY_MAPPED)?TRUE:FALSE;
+  SerialPortInfo->RegisterWidth = (UINT8)BlSerialInfo->RegWidth;
+  SerialPortInfo->BaudRate      = BlSerialInfo->Baud;
+  SerialPortInfo->RegisterBase  = BlSerialInfo->BaseAddr;
 
   return RETURN_SUCCESS;
 }
