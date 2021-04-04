@@ -10,7 +10,8 @@
 #include <Guid/GraphicsInfoHob.h>
 #include <Guid/MemoryMapInfoGuid.h>
 #include <Guid/SerialPortInfoGuid.h>
-#include <Guid/SystemTableInfoGuid.h>
+#include <Guid/AcpiTableGuid.h>
+#include <Guid/SmbiosTableGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
@@ -57,9 +58,9 @@ ParseMemoryInfo (
   );
 
 /**
-  Acquire acpi table and smbios table from slim bootloader
+  Acquire smbios table from slim bootloader
 
-  @param  SystemTableInfo           Pointer to the system table info
+  @param  SystemTableInfo           Pointer to the SMBIOS table info
 
   @retval RETURN_SUCCESS            Successfully find out the tables.
   @retval RETURN_NOT_FOUND          Failed to find the tables.
@@ -67,8 +68,23 @@ ParseMemoryInfo (
 **/
 RETURN_STATUS
 EFIAPI
-ParseSystemTable (
-  OUT SYSTEM_TABLE_INFO     *SystemTableInfo
+ParseSmbiosTable (
+  OUT SMBIOS_TABLE_HOB     *SmbiosTable
+  );
+
+/**
+  Acquire acpi table from slim bootloader
+
+  @param  AcpiTableHob              Pointer to the ACPI table info
+
+  @retval RETURN_SUCCESS            Successfully find out the tables.
+  @retval RETURN_NOT_FOUND          Failed to find the tables.
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseAcpiTableInfo (
+  OUT ACPI_TABLE_HOB        *AcpiTableHob
   );
 
 
