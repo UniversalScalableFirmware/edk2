@@ -2,7 +2,7 @@
   Header file of PciHostBridgeLib.
 
   Copyright (C) 2016, Red Hat, Inc.
-  Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2016 - 2020, Intel Corporation. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -11,14 +11,38 @@
 #ifndef _PCI_HOST_BRIDGE_H
 #define _PCI_HOST_BRIDGE_H
 
+#include <Guid/PciRootBridgeInfoGuid.h>
+
 typedef struct {
   ACPI_HID_DEVICE_PATH     AcpiDevicePath;
   EFI_DEVICE_PATH_PROTOCOL EndDevicePath;
 } CB_PCI_ROOT_BRIDGE_DEVICE_PATH;
 
+/**
+  Scan for all root bridges in platform.
+
+  @param[out] NumberOfRootBridges  Number of root bridges detected
+
+  @retval     Pointer to the allocated PCI_ROOT_BRIDGE structure array.
+**/
 PCI_ROOT_BRIDGE *
 ScanForRootBridges (
-  UINTN      *NumberOfRootBridges
+  OUT UINTN      *NumberOfRootBridges
+);
+
+/**
+  Scan for all root bridges from PciRootBridgeInfoHob
+
+  @param[in]  PciRootBridgeInfo    Pointer of PCI Root Bridge Info Hob
+  @param[out] NumberOfRootBridges  Number of root bridges detected
+
+  @retval     Pointer to the allocated PCI_ROOT_BRIDGE structure array.
+
+**/
+PCI_ROOT_BRIDGE *
+ScanForRootBridgesFromHob (
+  IN  PCI_ROOT_BRIDGE_INFO_HOB  *PciRootBridgeInfo,
+  OUT UINTN                     *NumberOfRootBridges
 );
 
 /**

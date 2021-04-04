@@ -36,9 +36,11 @@ ASM_PFX(_ModuleEntryPoint):
   ; Change code to use bootloader stack late.
   ; Push the bootloader parameter address onto new stack
   ;
-  ; used to save serial port info
+  ; Save bootloader parameter
   push  0
   push  eax
+
+  ; Save serial port info for platform hook library
   push  0
   push  0
   push  0
