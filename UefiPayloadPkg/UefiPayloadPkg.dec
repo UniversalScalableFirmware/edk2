@@ -3,7 +3,7 @@
 #
 # Provides drivers and definitions to create uefi payload for bootloaders.
 #
-# Copyright (c) 2014 - 2020, Intel Corporation. All rights reserved.<BR>
+# Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
@@ -52,7 +52,7 @@
 #                            declaration, other packages should not.
 #
 ################################################################################
-[PcdsFixedAtBuild, PcdsPatchableInModule]
+[PcdsFixedAtBuild, PcdsDynamic, PcdsDynamicEx, PcdsPatchableInModule]
 ## Indicates the base address of the payload binary in memory
 gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001
 ## Provides the size of the payload binary in memory
@@ -72,3 +72,28 @@ gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x
 
 # Size of the region used by UEFI in permanent memory
 gUefiPayloadPkgTokenSpaceGuid.PcdSystemMemoryUefiRegionSize|0x02000000|UINT32|0x00000017
+
+## Defines the 32-bit Timer register access address that resides within the ACPI BAR.
+# @Prompt ACPI PM1 timer register address
+gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1TimerRegister           |0|UINT32|0x00000018
+
+## Defines the Reset register access address that resides within the ACPI BAR.
+# @Prompt ACPI reset register address
+gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetRegister              |0|UINT64|0x00000019
+
+## Defines the reset value writing to ACPI reset register.
+# @Prompt Reset value to ACPI reset register
+gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetValue                 |0|UINT8|0x00000020
+
+## Defines the system port address of the PM1a Control Register Block.
+# @Prompt PM1a control register address
+gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aControlAddress         |0|UINT32|0x00000021
+
+## Defines the system port address of the PM1a Event Register Block.
+# @Prompt PM1a event register register
+gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aEventAddress           |0|UINT32|0x00000022
+
+## Defines the General-Purpose Event 0 Enable Register
+# @Prompt ACPI GPE0 enable register
+gUefiPayloadPkgTokenSpaceGuid.PcdAcpiGpe0EnableAddress          |0|UINT32|0x00000023
+

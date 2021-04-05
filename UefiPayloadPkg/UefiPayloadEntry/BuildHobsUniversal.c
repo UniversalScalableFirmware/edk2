@@ -71,12 +71,7 @@ BuildHobs (
   VOID
   )
 {
-  EFI_STATUS                       Status;
   EFI_PEI_HOB_POINTERS             Hob;
-  ACPI_TABLE_HOB                   *AcpiHob;
-  EFI_HOB_GUID_TYPE                *GuidHob;
-  ACPI_BOARD_INFO                  AcpiBoardInfo;
-  ACPI_BOARD_INFO                  *NewAcpiBoardInfo;
 
   //
   // Look through the HOB list from bootloader.
@@ -89,22 +84,6 @@ BuildHobs (
       AddNewHob (&Hob);
     }
     Hob.Raw = GET_NEXT_HOB (Hob);
-  }
-
-  //
-  // Get info from ACPI table and build a HOB for other modules
-  //
-  GuidHob  = GetFirstGuidHob (&gEfiAcpiTableGuid); //should use gEfiAcpi20TableGuid?
-  if (GuidHob != NULL) {
-    AcpiHob  = (ACPI_TABLE_HOB *) GET_GUID_HOB_DATA (GuidHob);
-    ASSERT (AcpiHob->TableAddress != 0);
-
-    Status = ParseAcpiInfo (AcpiHob->TableAddress, &AcpiBoardInfo);
-    ASSERT_EFI_ERROR (Status);
-    NewAcpiBoardInfo = BuildGuidHob (&gUefiAcpiBoardInfoGuid, sizeof (ACPI_BOARD_INFO));
-    ASSERT (NewAcpiBoardInfo != NULL);
-    CopyMem (NewAcpiBoardInfo, &AcpiBoardInfo, sizeof (ACPI_BOARD_INFO));
-    DEBUG ((DEBUG_INFO, "Create acpi board info guid hob\n"));
   }
 
   //
