@@ -68,8 +68,6 @@ BuildHobFromBl (
   ACPI_TABLE_HOB                   *NewAcpiTableHob;
   SMBIOS_TABLE_HOB                 SmbiosTable;
   SMBIOS_TABLE_HOB                 *NewSmbiosTable;
-  ACPI_BOARD_INFO                  AcpiBoardInfo;
-  ACPI_BOARD_INFO                  *NewAcpiBoardInfo;
   EFI_PEI_GRAPHICS_INFO_HOB        GfxInfo;
   EFI_PEI_GRAPHICS_INFO_HOB        *NewGfxInfo;
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB GfxDeviceInfo;
@@ -121,22 +119,10 @@ BuildHobFromBl (
   Status = ParseAcpiTableInfo(&AcpiTableHob);
   ASSERT_EFI_ERROR (Status);
   if (!EFI_ERROR (Status)) {
-    NewAcpiTableHob = BuildGuidHob (&gEfiSmbiosTableGuid, sizeof (AcpiTableHob));
+    NewAcpiTableHob = BuildGuidHob (&gEfiAcpiTableGuid, sizeof (AcpiTableHob));
     ASSERT (NewAcpiTableHob != NULL);
     CopyMem (NewAcpiTableHob, &AcpiTableHob, sizeof (AcpiTableHob));
     DEBUG ((DEBUG_INFO, "Detected ACPI Table at 0x%lx\n", AcpiTableHob.TableAddress));
-  }
-
-  //
-  // Create guid hob for acpi board information
-  //
-  Status = ParseAcpiInfo (AcpiTableHob.TableAddress, &AcpiBoardInfo);
-  ASSERT_EFI_ERROR (Status);
-  if (!EFI_ERROR (Status)) {
-    NewAcpiBoardInfo = BuildGuidHob (&gUefiAcpiBoardInfoGuid, sizeof (ACPI_BOARD_INFO));
-    ASSERT (NewAcpiBoardInfo != NULL);
-    CopyMem (NewAcpiBoardInfo, &AcpiBoardInfo, sizeof (ACPI_BOARD_INFO));
-    DEBUG ((DEBUG_INFO, "Create acpi board info guid hob\n"));
   }
 
   //

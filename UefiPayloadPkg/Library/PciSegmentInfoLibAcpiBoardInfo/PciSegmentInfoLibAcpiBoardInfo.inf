@@ -16,6 +16,7 @@
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = PciSegmentInfoLib | DXE_DRIVER
+  CONSTRUCTOR                    = PciSegmentInfoInitialize
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -32,5 +33,7 @@
 
 [LibraryClasses]
   PcdLib
-  HobLib
   DebugLib
+
+[Pcd]
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress

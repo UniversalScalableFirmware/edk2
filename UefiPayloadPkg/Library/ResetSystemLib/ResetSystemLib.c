@@ -10,54 +10,8 @@
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
-#include <Library/HobLib.h>
 #include <Library/BaseMemoryLib.h>
-#include <Guid/AcpiBoardInfoGuid.h>
 
-ACPI_BOARD_INFO    mAcpiBoardInfo;
-
-/**
-  The constructor function to initialize mAcpiBoardInfo.
-
-  @retval EFI_SUCCESS   The constructor always returns RETURN_SUCCESS.
-
-**/
-RETURN_STATUS
-EFIAPI
-ResetSystemLibConstructor (
-  VOID
-  )
-{
-  EFI_HOB_GUID_TYPE  *GuidHob;
-  ACPI_BOARD_INFO    *AcpiBoardInfoPtr;
-
-  //
-  // Find the acpi board information guid hob
-  //
-  GuidHob = GetFirstGuidHob (&gUefiAcpiBoardInfoGuid);
-  ASSERT (GuidHob != NULL);
-
-  AcpiBoardInfoPtr = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
-  CopyMem (&mAcpiBoardInfo, AcpiBoardInfoPtr, sizeof (ACPI_BOARD_INFO));
-
-  return EFI_SUCCESS;
-}
-
-
-VOID
-AcpiPmControl (
-  UINTN   SuspendType
-  )
-{
-  UINTN              PmCtrlReg;
-
-  ASSERT (SuspendType <= 7);
-
-  PmCtrlReg = (UINTN)mAcpiBoardInfo.PmCtrlRegBase;
-  IoAndThenOr16 (PmCtrlReg, (UINT16) ~0x3c00, (UINT16) (SuspendType << 10));
-  IoOr16 (PmCtrlReg, BIT13);
-  CpuDeadLoop ();
-}
 
 /**
   Calling this function causes a system-wide reset. This sets
@@ -74,7 +28,7 @@ ResetCold (
   VOID
   )
 {
-  IoWrite8 ((UINTN)mAcpiBoardInfo.ResetRegAddress, mAcpiBoardInfo.ResetValue);
+  IoWrite8 ((UINTN)PcdGet64 (PcdAcpiResetRegister), PcdGet8 (PcdAcpiResetValue));
   CpuDeadLoop ();
 }
 
@@ -91,7 +45,8 @@ ResetWarm (
   VOID
   )
 {
-  IoWrite8 ((UINTN)mAcpiBoardInfo.ResetRegAddress, mAcpiBoardInfo.ResetValue);
+  IoWrite8 ((UINTN)PcdGet64 (PcdAcpiResetRegister), PcdGet8 (PcdAcpiResetValue));
+
   CpuDeadLoop ();
 }
 
@@ -113,17 +68,17 @@ ResetShutdown (
   //
   // GPE0_EN should be disabled to avoid any GPI waking up the system from S5
   //
-  IoWrite16 ((UINTN)mAcpiBoardInfo.PmGpeEnBase,  0);
+  IoWrite16 (PcdGet32 (PcdAcpiGpe0EnableAddress),  0);
 
   //
   // Clear Power Button Status
   //
-  IoWrite16((UINTN) mAcpiBoardInfo.PmEvtBase, BIT8);
+  IoWrite16(PcdGet32 (PcdAcpiPm1aEventAddress), BIT8);
 
   //
   // Transform system into S5 sleep state
   //
-  PmCtrlReg = (UINTN)mAcpiBoardInfo.PmCtrlRegBase;
+  PmCtrlReg = PcdGet32 (PcdAcpiPm1aControlAddress);
   IoAndThenOr16 (PmCtrlReg, (UINT16) ~0x3c00, (UINT16) (7 << 10));
   IoOr16 (PmCtrlReg, BIT13);
   CpuDeadLoop ();

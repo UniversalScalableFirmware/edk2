@@ -1,7 +1,7 @@
 ## @file
 #  Library instance for ResetSystem library class for bootloader
 #
-#  Copyright (c) 2014 - 2019, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
@@ -14,7 +14,6 @@
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = ResetSystemLib
 
-  CONSTRUCTOR                    = ResetSystemLibConstructor
 #
 # The following information is for reference only and not required by the build tools.
 #
@@ -32,9 +31,12 @@
 [LibraryClasses]
   DebugLib
   IoLib
-  HobLib
   BaseMemoryLib
 
-[Guids]
-  gUefiAcpiBoardInfoGuid
+[Pcd]
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetRegister
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetValue
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiGpe0EnableAddress
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aEventAddress
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aControlAddress
 

@@ -1,7 +1,7 @@
 /** @file
   ACPI Timer implements one instance of Timer Library.
 
-  Copyright (c) 2014, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -10,46 +10,10 @@
 #include <Library/TimerLib.h>
 #include <Library/BaseLib.h>
 #include <Library/IoLib.h>
-#include <Library/HobLib.h>
 #include <Library/DebugLib.h>
-
-#include <Guid/AcpiBoardInfoGuid.h>
 #include <IndustryStandard/Acpi.h>
 
 #define ACPI_TIMER_COUNT_SIZE  BIT24
-
-UINTN mPmTimerReg = 0;
-
-/**
-  The constructor function enables ACPI IO space.
-
-  If ACPI I/O space not enabled, this function will enable it.
-  It will always return RETURN_SUCCESS.
-
-  @retval EFI_SUCCESS   The constructor always returns RETURN_SUCCESS.
-
-**/
-RETURN_STATUS
-EFIAPI
-AcpiTimerLibConstructor (
-  VOID
-  )
-{
-  EFI_HOB_GUID_TYPE  *GuidHob;
-  ACPI_BOARD_INFO    *pAcpiBoardInfo;
-
-  //
-  // Find the acpi board information guid hob
-  //
-  GuidHob = GetFirstGuidHob (&gUefiAcpiBoardInfoGuid);
-  ASSERT (GuidHob != NULL);
-
-  pAcpiBoardInfo = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
-
-  mPmTimerReg = (UINTN)pAcpiBoardInfo->PmTimerRegBase;
-
-  return EFI_SUCCESS;
-}
 
 /**
   Internal function to read the current tick counter of ACPI.
@@ -64,10 +28,9 @@ InternalAcpiGetTimerTick (
   VOID
   )
 {
-  if (mPmTimerReg == 0) {
-    AcpiTimerLibConstructor ();
-  }
-  return IoRead32 (mPmTimerReg);
+
+  ASSERT (PcdGet32 (PcdAcpiPm1TimerRegister) != 0);
+  return IoRead32 (PcdGet32 (PcdAcpiPm1TimerRegister));
 }
 
 /**
