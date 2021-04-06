@@ -36,6 +36,17 @@
   gLoaderMemoryMapInfoGuid = { 0xa1ff7424, 0x7a1a, 0x478e, { 0xa9, 0xe4, 0x92, 0xf3, 0x57, 0xd1, 0x28, 0x32 } }
   gLoaderPciRootBridgeInfoGuid            = { 0xb7f3d111, 0xb98d, 0x422f, { 0x84, 0x31, 0xa7, 0xd8, 0x29, 0xec, 0x00, 0x87 } }
 
+  gSpiFlashInfoGuid         = { 0x2d4aac1b, 0x91a5, 0x4cd5, { 0x9b, 0x5c, 0xb4, 0x0f, 0x5d, 0x28, 0x51, 0xa1 } }
+  gNvVariableInfoGuid       = { 0x7a345dca, 0xc26, 0x4f2a,  { 0xa8, 0x9a, 0x57, 0xc0, 0x8d, 0xdd, 0x22, 0xee } }
+
+  gPldSmmRegisterInfoGuid   = { 0xaa9bd7a7, 0xcafb, 0x4499, { 0xa4, 0xa9, 0xb, 0x34, 0x6b, 0x40, 0xa6, 0x22 } }
+  gPldS3CommunicationGuid   = { 0x88e31ba1, 0x1856, 0x4b8b, { 0xbb, 0xdf, 0xf8, 0x16, 0xdd, 0x94, 0xa, 0xef } }
+
+  gSmmInformationGuid                     = { 0x2d939d66, 0xceec, 0x4244, { 0x94, 0x97, 0x6e, 0x1c, 0x6f, 0x92, 0x54, 0x2c } }
+  gLoaderPlatformInfoGuid                 = { 0x7b6bad42, 0xd3ab, 0x4947, { 0xa2, 0x6e, 0xd6, 0xf9, 0xa9, 0xac, 0x4a, 0x2a } }
+  gDeviceTableHobGuid                     = { 0xd21fc32c, 0x7fd2, 0x435b, { 0xb8, 0xef, 0xc0, 0x42, 0x66, 0xa8, 0xf4, 0xf5 } }
+  gFlashMapInfoGuid                       = { 0xaf7f452c, 0x5b00, 0x4598, { 0xb4, 0x8c, 0xbf, 0x57, 0xa2, 0x08, 0x71, 0xa1 } }
+
 [Ppis]
   gEfiPayLoadHobBasePpiGuid = { 0xdbe23aa1, 0xa342, 0x4b97, {0x85, 0xb6, 0xb2, 0x26, 0xf1, 0x61, 0x73, 0x89} }
 
@@ -44,6 +55,7 @@
   # Gop Temp
   #
   gPlatformGOPPolicyGuid                  = { 0xec2e931b, 0x3281, 0x48a5, { 0x81, 0x07, 0xdf, 0x8a, 0x8b, 0xed, 0x3c, 0x5d } }
+  gEfiSpiProtocolGuid                     = { 0xf8b84ae6, 0x8465, 0x4f95, {0x9f, 0xb, 0xea, 0xaa, 0x37, 0xc6, 0x15,  0x5a}}
 
 ################################################################################
 #
@@ -53,47 +65,52 @@
 #
 ################################################################################
 [PcdsFixedAtBuild, PcdsDynamic, PcdsDynamicEx, PcdsPatchableInModule]
-## Indicates the base address of the payload binary in memory
-gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001
-## Provides the size of the payload binary in memory
-gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize|0|UINT32|0x10000002
-## Payload stack top
-gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop|0x90000|UINT32|0x10000004
+  ## Indicates the base address of the payload binary in memory
+  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001
 
-## FFS filename to find the shell application.
-gUefiPayloadPkgTokenSpaceGuid.PcdShellFile|{ 0x83, 0xA5, 0x04, 0x7C, 0x3E, 0x9E, 0x1c, 0x4f, 0xAD, 0x65, 0xE0, 0x52, 0x68, 0xD0, 0xB4, 0xD1 }|VOID*|0x10000005
+  ## Provides the size of the payload binary in memory
+  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize|0|UINT32|0x10000002
 
-## Used to help reduce fragmentation in the EFI memory map
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory|0x08|UINT32|0x10000012
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS|0x04|UINT32|0x10000013
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType|0x04|UINT32|0x00000014
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32|0x00000015
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
+  ## Payload stack top
+  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop|0x90000|UINT32|0x10000004
 
-# Size of the region used by UEFI in permanent memory
-gUefiPayloadPkgTokenSpaceGuid.PcdSystemMemoryUefiRegionSize|0x02000000|UINT32|0x00000017
+  ## FFS filename to find the shell application.
+  gUefiPayloadPkgTokenSpaceGuid.PcdShellFile|{ 0x83, 0xA5, 0x04, 0x7C, 0x3E, 0x9E, 0x1c, 0x4f, 0xAD, 0x65, 0xE0, 0x52, 0x68, 0xD0, 0xB4, 0xD1 }|VOID*|0x10000005
 
-## Defines the 32-bit Timer register access address that resides within the ACPI BAR.
-# @Prompt ACPI PM1 timer register address
-gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1TimerRegister           |0|UINT32|0x00000018
+  ## Used to help reduce fragmentation in the EFI memory map
+  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory|0x08|UINT32|0x10000012
+  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS|0x04|UINT32|0x10000013
+  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType|0x04|UINT32|0x00000014
+  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32|0x00000015
+  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
 
-## Defines the Reset register access address that resides within the ACPI BAR.
-# @Prompt ACPI reset register address
-gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetRegister              |0|UINT64|0x00000019
+  # Size of the region used by UEFI in permanent memory
+  gUefiPayloadPkgTokenSpaceGuid.PcdSystemMemoryUefiRegionSize|0x02000000|UINT32|0x00000017
 
-## Defines the reset value writing to ACPI reset register.
-# @Prompt Reset value to ACPI reset register
-gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetValue                 |0|UINT8|0x00000020
+  ## Defines the 32-bit Timer register access address that resides within the ACPI BAR.
+  # @Prompt ACPI PM1 timer register address
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1TimerRegister           |0|UINT32|0x00000018
 
-## Defines the system port address of the PM1a Control Register Block.
-# @Prompt PM1a control register address
-gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aControlAddress         |0|UINT32|0x00000021
+  ## Defines the Reset register access address that resides within the ACPI BAR.
+  # @Prompt ACPI reset register address
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetRegister              |0|UINT64|0x00000019
 
-## Defines the system port address of the PM1a Event Register Block.
-# @Prompt PM1a event register register
-gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aEventAddress           |0|UINT32|0x00000022
+  ## Defines the reset value writing to ACPI reset register.
+  # @Prompt Reset value to ACPI reset register
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiResetValue                 |0|UINT8|0x00000020
 
-## Defines the General-Purpose Event 0 Enable Register
-# @Prompt ACPI GPE0 enable register
-gUefiPayloadPkgTokenSpaceGuid.PcdAcpiGpe0EnableAddress          |0|UINT32|0x00000023
+  ## Defines the system port address of the PM1a Control Register Block.
+  # @Prompt PM1a control register address
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aControlAddress         |0|UINT32|0x00000021
+
+  ## Defines the system port address of the PM1a Event Register Block.
+  # @Prompt PM1a event register register
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiPm1aEventAddress           |0|UINT32|0x00000022
+
+  ## Defines the General-Purpose Event 0 Enable Register
+  # @Prompt ACPI GPE0 enable register
+  gUefiPayloadPkgTokenSpaceGuid.PcdAcpiGpe0EnableAddress          |0|UINT32|0x00000023
+  ## FFS filename to find the default variable initial data file.
+  # @Prompt FFS Name of variable initial data file
+  gUefiPayloadPkgTokenSpaceGuid.PcdNvsDataFile |{ 0x1a, 0xf1, 0xb1, 0xae, 0x42, 0xcc, 0xcf, 0x4e, 0xac, 0x60, 0xdb, 0xab, 0xf6, 0xca, 0x69, 0xe6 }|VOID*|0x00000030
 

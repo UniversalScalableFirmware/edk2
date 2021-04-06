@@ -73,6 +73,18 @@ BuildHobFromBl (
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB GfxDeviceInfo;
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB *NewGfxDeviceInfo;
 
+  EFI_SMRAM_HOB_DESCRIPTOR_BLOCK   *SmramHob;
+  UINT32                           Size;
+  UINT8                            Buffer[200];
+  PLD_SMM_REGISTERS                *SmmRegisterHob;
+  VOID                             *NewHob;
+  UINT32                           Index;
+  PLD_S3_COMMUNICATION             *PldS3Info;
+  SPI_FLASH_INFO                   SpiFlashInfo;
+  SPI_FLASH_INFO                   *NewSpiFlashInfo;
+  NV_VARIABLE_INFO                 NvVariableInfo;
+  NV_VARIABLE_INFO                 *NewNvVariableInfo;
+
   //
   // Parse memory info and build memory HOBs
   //
@@ -123,6 +135,85 @@ BuildHobFromBl (
     ASSERT (NewAcpiTableHob != NULL);
     CopyMem (NewAcpiTableHob, &AcpiTableHob, sizeof (AcpiTableHob));
     DEBUG ((DEBUG_INFO, "Detected ACPI Table at 0x%lx\n", AcpiTableHob.TableAddress));
+  }
+
+  //
+  // Create SMRAM information HOB
+  //
+  SmramHob = (EFI_SMRAM_HOB_DESCRIPTOR_BLOCK *)Buffer;
+  Size     = sizeof (Buffer);
+  Status = GetSmramInfo (SmramHob, &Size);
+  DEBUG((DEBUG_INFO, "GetSmramInfo = %r, data Size = 0x%x\n", Status, Size));
+  if (!EFI_ERROR (Status)) {
+    NewHob = BuildGuidHob (&gEfiSmmSmramMemoryGuid, Size);
+    ASSERT (NewHob != NULL);
+    CopyMem (NewHob, SmramHob, Size);
+    DEBUG((DEBUG_INFO, "Region count = 0x%x\n", SmramHob->NumberOfSmmReservedRegions));
+    for (Index = 0; Index < SmramHob->NumberOfSmmReservedRegions; Index++ ) {
+      DEBUG((DEBUG_INFO, "CpuStart[%d] = 0x%lx\n", Index, SmramHob->Descriptor[Index].CpuStart));
+      DEBUG((DEBUG_INFO, "base[%d]     = 0x%lx\n", Index, SmramHob->Descriptor[Index].PhysicalStart));
+      DEBUG((DEBUG_INFO, "size[%d]     = 0x%lx\n", Index, SmramHob->Descriptor[Index].PhysicalSize));
+      DEBUG((DEBUG_INFO, "State[%d]    = 0x%lx\n", Index, SmramHob->Descriptor[Index].RegionState));
+    }
+  }
+
+  //
+  // Create SMM register information HOB
+  //
+  SmmRegisterHob = (PLD_SMM_REGISTERS *)Buffer;
+  Size           = sizeof (Buffer);
+  Status = GetSmmRegisterInfo (SmmRegisterHob, &Size);
+  DEBUG((DEBUG_INFO, "GetSmmRegisterInfo = %r, data Size = 0x%x\n", Status, Size));
+  if (!EFI_ERROR (Status)) {
+    NewHob = BuildGuidHob (&gPldSmmRegisterInfoGuid, Size);
+    ASSERT (NewHob != NULL);
+    CopyMem (NewHob, SmramHob, Size);
+    DEBUG((DEBUG_INFO, "SMM register count = 0x%x\n", SmmRegisterHob->Count));
+    for (Index = 0; Index < SmmRegisterHob->Count; Index++ ) {
+      DEBUG((DEBUG_INFO, "ID[%d]            = 0x%lx\n", Index, SmmRegisterHob->Registers[Index].Id));
+      DEBUG((DEBUG_INFO, "Value[%d]         = 0x%lx\n", Index, SmmRegisterHob->Registers[Index].Value));
+      DEBUG((DEBUG_INFO, "AddressSpaceId    = 0x%x\n",  SmmRegisterHob->Registers[Index].Address.AddressSpaceId));
+      DEBUG((DEBUG_INFO, "RegisterBitWidth  = 0x%x\n",  SmmRegisterHob->Registers[Index].Address.RegisterBitWidth));
+      DEBUG((DEBUG_INFO, "RegisterBitOffset = 0x%x\n",  SmmRegisterHob->Registers[Index].Address.RegisterBitOffset));
+      DEBUG((DEBUG_INFO, "AccessSize        = 0x%x\n",  SmmRegisterHob->Registers[Index].Address.AccessSize));
+      DEBUG((DEBUG_INFO, "Address           = 0x%lx\n", SmmRegisterHob->Registers[Index].Address.Address));
+    }
+  }
+
+  //
+  // Create SMM S3 information HOB
+  //
+  PldS3Info = (PLD_S3_COMMUNICATION *)Buffer;
+  Size      = sizeof (Buffer);
+  Status = GetPldS3CommunicationInfo (PldS3Info, &Size);
+  DEBUG((DEBUG_INFO, "GetPldS3Info = %r, data Size = 0x%x\n", Status, Size));
+  if (!EFI_ERROR (Status)) {
+    NewHob = BuildGuidHob (&gPldS3CommunicationGuid, Size);
+    ASSERT (NewHob != NULL);
+    CopyMem (NewHob, SmramHob, Size);
+    PldS3Info = (PLD_S3_COMMUNICATION *)NewHob;
+  }
+
+  //
+  // Create a HOB for SPI flash info
+  //
+  Status = ParseSpiFlashInfo(&SpiFlashInfo);
+  if (!EFI_ERROR (Status)) {
+    NewSpiFlashInfo = BuildGuidHob (&gSpiFlashInfoGuid, sizeof (SPI_FLASH_INFO));
+    ASSERT (NewSpiFlashInfo != NULL);
+    CopyMem (NewSpiFlashInfo, &SpiFlashInfo, sizeof (SPI_FLASH_INFO));
+    DEBUG ((DEBUG_INFO, "Flags=0x%x, SPI PCI Base=0x%lx\n", SpiFlashInfo.Flags, SpiFlashInfo.SpiAddress.Address));
+  }
+
+  //
+  // Create a hob for NV variable
+  //
+  Status = ParseNvVariableInfo(&NvVariableInfo);
+  if (!EFI_ERROR (Status)) {
+    NewNvVariableInfo = BuildGuidHob (&gNvVariableInfoGuid, sizeof (NV_VARIABLE_INFO));
+    ASSERT (NewNvVariableInfo != NULL);
+    CopyMem (NewNvVariableInfo, &NvVariableInfo, sizeof (NV_VARIABLE_INFO));
+    DEBUG ((DEBUG_INFO, "VarStoreBase=0x%x, length=0x%x\n", NvVariableInfo.VariableStoreBase, NvVariableInfo.VariableStoreSize));
   }
 
   //
