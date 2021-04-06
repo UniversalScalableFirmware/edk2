@@ -12,6 +12,11 @@
 #include <Guid/SerialPortInfoGuid.h>
 #include <Guid/AcpiTableGuid.h>
 #include <Guid/SmbiosTableGuid.h>
+#include <Guid/SmramMemoryReserve.h>
+#include <Guid/SmmRegisterInfoGuid.h>
+#include <Guid/SmmS3CommunicationInfoGuid.h>
+#include <Guid/SpiFlashInfoGuid.h>
+#include <Guid/NvVariableInfoGuid.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__
@@ -131,6 +136,90 @@ RETURN_STATUS
 EFIAPI
 ParseGfxDeviceInfo (
   OUT EFI_PEI_GRAPHICS_DEVICE_INFO_HOB       *GfxDeviceInfo
+  );
+
+/**
+  Get the SMRAM info
+
+  @param[out]     SmramHob      Pointer to SMM information
+  @param[in, out] Size          The buffer size in input, and the actual data size in output.
+
+  @retval RETURN_SUCCESS       Successfully find out the SMRAM info.
+  @retval EFI_BUFFER_TOO_SMALL The buffer is too small for the data.
+  @retval RETURN_NOT_FOUND     Failed to find the SMRAM info.
+
+**/
+RETURN_STATUS
+EFIAPI
+GetSmramInfo (
+  OUT EFI_SMRAM_HOB_DESCRIPTOR_BLOCK   *SmramHob,
+  IN OUT UINT32                        *Size
+  );
+
+/**
+  Get the SMM register info
+
+  @param[out]     SmmRegHob     Pointer to SMM information
+  @param[in, out] Size          The buffer size in input, and the actual data size in output.
+
+  @retval RETURN_SUCCESS       Successfully find out the SMM register info.
+  @retval EFI_BUFFER_TOO_SMALL The buffer is too small for the data.
+  @retval RETURN_NOT_FOUND     Failed to find the SMM register info.
+
+**/
+RETURN_STATUS
+EFIAPI
+GetSmmRegisterInfo (
+  OUT PLD_SMM_REGISTERS                *SmmRegHob,
+  IN OUT UINT32                        *Size
+  );
+
+/**
+  Get the payload S3 communication HOB
+
+  @param[out]     PldS3Hob      Pointer to payload S3 communication buffer
+  @param[in, out] Size          The buffer size in input, and the actual data size in output.
+
+  @retval RETURN_SUCCESS       Successfully get the payload S3 communication HOB.
+  @retval EFI_BUFFER_TOO_SMALL The buffer is too small for the data.
+  @retval RETURN_NOT_FOUND     Failed to find the SMM communication info.
+
+**/
+RETURN_STATUS
+EFIAPI
+GetPldS3CommunicationInfo (
+  OUT PLD_S3_COMMUNICATION             *PldS3Hob,
+  IN OUT UINT32                        *Size
+  );
+
+/**
+  Find the Spi flash variable related info.
+
+  @param  SpiFlashInfo        Pointer to Spi flash info structure.
+
+  @retval RETURN_SUCCESS     Successfully find the info.
+  @retval RETURN_NOT_FOUND   Failed to find the info .
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseSpiFlashInfo (
+  OUT SPI_FLASH_INFO           *SpiFlashInfo
+  );
+
+/**
+  GEt the NV variable info.
+
+  @param  NvVariableInfo     Pointer to NV variable info.
+
+  @retval RETURN_SUCCESS     Successfully get the info.
+  @retval RETURN_NOT_FOUND   Failed to get the info 
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseNvVariableInfo (
+  OUT NV_VARIABLE_INFO         *NvVariableInfo
   );
 
 #endif

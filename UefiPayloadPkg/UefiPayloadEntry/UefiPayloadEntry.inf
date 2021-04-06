@@ -67,6 +67,11 @@
   gUefiAcpiBoardInfoGuid
   gEfiSmbiosTableGuid
   gEfiAcpiTableGuid
+  gEfiSmmSmramMemoryGuid
+  gPldSmmRegisterInfoGuid
+  gPldS3CommunicationGuid
+  gNvVariableInfoGuid
+  gSpiFlashInfoGuid
 
 [FeaturePcd.IA32]
   gEfiMdeModulePkgTokenSpaceGuid.PcdDxeIplSwitchToLongMode      ## CONSUMES

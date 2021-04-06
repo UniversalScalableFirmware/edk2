@@ -299,22 +299,6 @@ BlSupportSmmReadyToLockCallback (
   IN EFI_HANDLE                           Handle
   )
 {
-  EFI_STATUS                              Status;
-  VOID                                    *Interface1;
-
-  DEBUG ((DEBUG_ERROR, "BlSupportSmmReadyToLockNotification \n\n\n"));
-
-  //
-  // Try to locate it because EfiCreateProtocolNotifyEvent will trigger it once when registration.
-  // Just return if it is not found.
-  //
-  Status = gBS->LocateProtocol (&gEfiSmmReadyToLockProtocolGuid, NULL, &Interface1);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  DEBUG ((DEBUG_ERROR, "BlSupportSmmReadyToLockNotification 2\n\n\n"));
-
   //
   // Set SMM SMI lock
   //
