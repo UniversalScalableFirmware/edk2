@@ -1,6 +1,6 @@
 /** @file
 *
-* Copyright (c) 2021, Intel Corporation. All rights reserved.<BR>
+* Copyright (c) 2020, Intel Corporation. All rights reserved.<BR>
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
@@ -21,16 +21,10 @@
 #include <Guid/MemoryAllocationHob.h>
 #include <Library/IoLib.h>
 #include <Library/PeCoffLib.h>
-#include <Library/BlParseLib.h>
 #include <Library/PlatformSupportLib.h>
 #include <Library/UefiCpuLib.h>
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
-#include <Guid/SerialPortInfoGuid.h>
-#include <Guid/SystemTableInfoGuid.h>
-#include <Guid/MemoryMapInfoGuid.h>
-#include <Guid/AcpiBoardInfoGuid.h>
-#include <Guid/GraphicsInfoHob.h>
 #include <Guid/SmBiosTableHob.h>
 #include <Guid/AcpiTableHob.h>
 
@@ -130,6 +124,17 @@ VOID
 HandOffToDxeCore (
   IN EFI_PHYSICAL_ADDRESS   DxeCoreEntryPoint,
   IN EFI_PEI_HOB_POINTERS   HobList
+  );
+
+/**
+  It will build HOBs based on information from bootloaders.
+
+  @retval EFI_SUCCESS        If it completed successfully.
+  @retval Others             If it failed to build required HOBs.
+**/
+EFI_STATUS
+BuildHobs (
+  IN UINTN                     BootloaderParameter
   );
 
 #endif
