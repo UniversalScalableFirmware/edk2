@@ -1,7 +1,7 @@
 ## @file
 #  This is the first module for UEFI payload.
 #
-#  Copyright (c) 2006 - 2021, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2006 - 2020, Intel Corporation. All rights reserved.<BR>
 #  Copyright (c) 2017, AMD Incorporated. All rights reserved.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -10,8 +10,8 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = PayloadEntry
-  FILE_GUID                      = 2119BBD7-9432-4f47-B5E2-5C4EA31B6BDC
+  BASE_NAME                      = UniversalPayloadEntry
+  FILE_GUID                      = D4F0F269-1209-4A66-8039-C4D5A700EA4E
   MODULE_TYPE                    = SEC
   VERSION_STRING                 = 1.0
 
@@ -25,7 +25,7 @@
   UefiPayloadEntry.c
   LoadDxeCore.c
   MemoryAllocation.c
-  BuildHobs.c
+  BuildHobsUniversal.c
 
 [Sources.Ia32]
   X64/VirtualMemory.h
@@ -52,10 +52,8 @@
   BaseLib
   SerialPortLib
   IoLib
-  BlParseLib
   HobLib
   PeCoffLib
-  PlatformSupportLib
   UefiCpuLib
 
 [Guids]
@@ -65,8 +63,9 @@
   gEfiGraphicsInfoHobGuid
   gEfiGraphicsDeviceInfoHobGuid
   gUefiAcpiBoardInfoGuid
-  gPldSmbiosTableGuid
-  gPldAcpiTableGuid
+  gEfiSmbiosTableGuid
+  gEfiAcpiTableGuid
+  gUefiSerialPortInfoGuid
   gPldImageBaseGuid
 
 [FeaturePcd.IA32]

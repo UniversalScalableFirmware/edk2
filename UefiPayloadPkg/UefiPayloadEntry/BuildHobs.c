@@ -338,8 +338,10 @@ BuildGenericHob (
   UINT32                           RegEax;
   UINT8                            PhysicalAddressBits;
   EFI_RESOURCE_ATTRIBUTE_TYPE      ResourceAttribute;
-
+  PLD_IMAGE_BASE_HOB               *PldImageBaseHob;
   // The UEFI payload FV
+  PldImageBaseHob = (PLD_IMAGE_BASE_HOB *) BuildGuidHob (&gPldImageBaseGuid, sizeof (PLD_IMAGE_BASE_HOB));
+  PldImageBaseHob->Base = PcdGet32 (PcdPayloadFdMemBase);
   BuildMemoryAllocationHob (PcdGet32 (PcdPayloadFdMemBase), PcdGet32 (PcdPayloadFdMemSize), EfiBootServicesData);
 
   //
