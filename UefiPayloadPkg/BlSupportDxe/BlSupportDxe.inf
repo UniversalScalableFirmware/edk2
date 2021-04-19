@@ -53,6 +53,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseSize
+  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
 
 [Depex]
   TRUE

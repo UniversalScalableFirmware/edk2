@@ -103,6 +103,12 @@ BlDxeEntryPoint (
   ACPI_BOARD_INFO            *AcpiBoardInfo;
 
   Status = EFI_SUCCESS;
+
+  //
+  // Update Hob base
+  //
+  SET_BOOTLOADER_PARAMETER((UINTN)GetHobList());
+
   //
   // Report MMIO/IO Resources
   //
