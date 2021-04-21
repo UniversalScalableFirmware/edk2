@@ -27,6 +27,7 @@
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
+  DEFINE UNIVERSAL_PAYLOAD            = FALSE
 
   #
   # SBL:      UEFI payload for Slim Bootloader
@@ -188,7 +189,11 @@
   TimerLib|UefiPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
   ResetSystemLib|UefiPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+  PlatformHookLib|UefiPayloadPkg/Library/UniversalPayloadPlatformHookLib/UniversalPayloadPlatformHookLib.inf
+!else
   PlatformHookLib|UefiPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
+!endif
   PlatformBootManagerLib|UefiPayloadPkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   IoApicLib|PcAtChipsetPkg/Library/BaseIoApicLib/BaseIoApicLib.inf
 
@@ -205,10 +210,12 @@
   DebugAgentLib|MdeModulePkg/Library/DebugAgentLibNull/DebugAgentLibNull.inf
 !endif
   PlatformSupportLib|UefiPayloadPkg/Library/PlatformSupportLibNull/PlatformSupportLibNull.inf
-!if $(BOOTLOADER) == "COREBOOT"
-  BlParseLib|UefiPayloadPkg/Library/CbParseLib/CbParseLib.inf
-!else
-  BlParseLib|UefiPayloadPkg/Library/SblParseLib/SblParseLib.inf
+!if $(UNIVERSAL_PAYLOAD) == FALSE
+  !if $(BOOTLOADER) == "COREBOOT"
+    BlParseLib|UefiPayloadPkg/Library/CbParseLib/CbParseLib.inf
+  !else
+    BlParseLib|UefiPayloadPkg/Library/SblParseLib/SblParseLib.inf
+  !endif
 !endif
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
@@ -372,10 +379,18 @@
 
 !if "IA32" in $(ARCH)
   [Components.IA32]
+  !if $(UNIVERSAL_PAYLOAD) == TRUE
+    UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+  !else
     UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+  !endif
 !else
   [Components.X64]
+  !if $(UNIVERSAL_PAYLOAD) == TRUE
+    UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+  !else
     UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
+  !endif
 !endif
 
 [Components.X64]
