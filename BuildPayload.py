@@ -23,6 +23,28 @@ from   ctypes import *
 sys.dont_write_bytecode = True
 
 
+class UPLD_INFO_HEADER(Structure):
+    _pack_ = 1
+    _fields_ = [
+        ('Identifier',           ARRAY(c_char, 4)),
+        ('HeaderLength',         c_uint16),
+        ('HeaderRevision',       c_uint8),
+        ('Reserved',             c_uint8),
+        ('Revision',             c_uint64),
+        ('Capability',           c_uint64),
+        ('ImageId',              ARRAY(c_char, 16)),
+        ('ProducerId',           ARRAY(c_char, 16))
+        ]
+
+    def __init__(self):
+        self.Identifier     =  b'UPLD'
+        self.HeaderLength   = sizeof(UPLD_INFO_HEADER)
+        self.HeaderRevision = 1
+        self.Revision       = 0x0105
+        self.Revision       = 0x0105
+        self.ImageId        = b'UEFI'
+        self.ProducerId     = b'INTEL'
+
 def get_visual_studio_info ():
 
     toolchain        = ''
@@ -218,6 +240,9 @@ def create_conf (workspace, sbl_source):
 
 def prep_env ():
     # check python version first
+    if os.name != 'posix':
+        raise SystemExit ('ERROR: Sorry, only Linux env is supported at this point !')
+
     version = check_for_python ()
     os.environ['PYTHON_COMMAND'] = '"' + sys.executable + '"'
     print_tool_version_info(os.environ['PYTHON_COMMAND'], version.strip())
@@ -300,20 +325,54 @@ def main():
       arch_list = []
       if args.arch == 'mix':
           arch_list = ['-a', 'IA32', '-a', 'X64']
+          entry_arch = 'IA32'
       elif args.arch == 'x64':
           arch_list = ['-a', 'X64']
+          entry_arch = 'X64'
       else:  # IA32
           arch_list = ['-a', 'IA32']
+          entry_arch = 'IA32'
 
+      target = 'RELEASE' if args.release else 'DEBUG'
       cmd_args = [
           "build" if os.name == 'posix' else "build.bat",
           "--platform", 'UefiPayloadPkg/UefiPayloadPkg.dsc',
-          "-b",         'RELEASE' if args.release else 'DEBUG',
+          "-b",         target,
           "--tagname",  os.environ['TOOL_CHAIN'],
           "-n",         str(multiprocessing.cpu_count()),
           ] + arch_list + def_list
 
       run_process (cmd_args)
+
+      # generate ELF UEFI payload
+      out_dir = 'Build/UefiPayloadPkg/%s_%s' % (target, os.environ['TOOL_CHAIN'])
+      dxe_fv   = out_dir + '/FV/DXEFV.Fv'
+      pld_info = out_dir + '/FV/UpldInfo.bin'
+      uefi_pld_elf  = out_dir + '/FV/UefiPayload.elf'
+      pld_entry_elf = 'Build/UefiPayloadPkg/%s_%s/%s/UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry/%s/PayloadEntry.dll' % (target, os.environ['TOOL_CHAIN'], entry_arch, target)
+      if entry_arch == 'X64':
+          raise Exception ('Not supported yet !')
+      else:
+          sec_name = '.upld.uefi'
+          sec_info = '.upld_info'
+          obj_copy = 'llvm-objcopy-10'
+          upld_info_hdr =  UPLD_INFO_HEADER()
+          fp = open(pld_info, 'wb')
+          fp.write(bytearray(upld_info_hdr))
+          fp.close()
+          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--add-section', '%s=%s' % (sec_info, pld_info), pld_entry_elf, uefi_pld_elf)
+          run_process (cmd_args)
+          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--set-section-alignment', '%s=16' % sec_info, uefi_pld_elf)
+          run_process (cmd_args)
+          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--add-section', '%s=%s' % (sec_name, dxe_fv), uefi_pld_elf)
+          run_process (cmd_args)
+          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--set-section-alignment', '%s=4096' % sec_name, uefi_pld_elf)
+          run_process (cmd_args)
+
+
+
+      print ('Done')
+
 
 
   buildp = sp.add_parser('build', help='build UEFI payload for coreboot or Slim Bootloader')

@@ -254,12 +254,25 @@ PayloadEntry (
   UINTN                         HobMemBase;
   UINTN                         HobMemSize;
   EFI_PEI_HOB_POINTERS          Hob;
+  EFI_HOB_GUID_TYPE            *GuidHob;
+  LOADED_PAYLOAD_IMAGE_INFO    *PldImgInfo;
 
-  DEBUG ((EFI_D_ERROR, "GET_BOOTLOADER_PARAMETER() = 0x%lx\n", GET_BOOTLOADER_PARAMETER()));
+  DEBUG ((EFI_D_ERROR, "GET_BOOTLOADER_PARAMETER() = 0x%x\n", (UINT32)GET_BOOTLOADER_PARAMETER()));
   DEBUG ((EFI_D_ERROR, "sizeof(UINTN) = 0x%x\n", sizeof(UINTN)));
 
   if (FdBase == 0) {
     FdBase = PcdGet32 (PcdPayloadFdMemBase);
+  }
+
+  //
+  // Look through the HOB list to find UEFI payload FV base.
+  //
+  GuidHob = GetNextGuidHob (&gLoadedPayloadImageInfoGuid, (VOID*)(UINTN)GET_BOOTLOADER_PARAMETER ());
+  if (GuidHob != NULL) {
+    PldImgInfo  = (LOADED_PAYLOAD_IMAGE_INFO *) GET_GUID_HOB_DATA (GuidHob);
+    if (PldImgInfo->EntryNum > 0) {
+      FdBase = (UINTN)PldImgInfo->Entry[0].Base;
+    }
   }
   DEBUG ((EFI_D_ERROR, "Payload Image Base = 0x%x\n", FdBase));
 
@@ -267,7 +280,7 @@ PayloadEntry (
   InitializeFloatingPointUnits ();
 
   // Init the region for HOB and memory allocation for this module
-  HobMemBase      = ALIGN_VALUE (FdBase+ PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
+  HobMemBase      = 0x800000; //ALIGN_VALUE (FdBase+ PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
   HobMemSize      = FixedPcdGet32 (PcdSystemMemoryUefiRegionSize);
   HobConstructor ((VOID *)HobMemBase, HobMemSize, (VOID *)HobMemBase, (VOID *)(HobMemBase + HobMemSize));
   DEBUG ((EFI_D_ERROR, "HobMemBase = 0x%x, HobMemSize = 0x%x\n", HobMemBase, HobMemSize));

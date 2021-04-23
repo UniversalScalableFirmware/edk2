@@ -245,17 +245,28 @@ LoadDxeCore (
   UINT64                      ImageSize;
 
   PayloadFv = (EFI_FIRMWARE_VOLUME_HEADER *)FvBase;
+  DxeCoreFv = PayloadFv;
+  Status = FvFindFile (DxeCoreFv, EFI_FV_FILETYPE_DXE_CORE, &FileHeader);  
+  if (EFI_ERROR (Status)) {
+    //
+    // DXE FV is inside Payload FV. Here find DXE FV from Payload FV
+    //
+    Status = FvFindFile (PayloadFv, EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE, &FileHeader);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+    Status = FileFindSection (FileHeader, EFI_SECTION_FIRMWARE_VOLUME_IMAGE, (VOID **)&DxeCoreFv);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
 
-  //
-  // DXE FV is inside Payload FV. Here find DXE FV from Payload FV
-  //
-  Status = FvFindFile (PayloadFv, EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE, &FileHeader);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-  Status = FileFindSection (FileHeader, EFI_SECTION_FIRMWARE_VOLUME_IMAGE, (VOID **)&DxeCoreFv);
-  if (EFI_ERROR (Status)) {
-    return Status;
+    //
+    // Find DXE core file from DXE FV
+    //
+    Status = FvFindFile (DxeCoreFv, EFI_FV_FILETYPE_DXE_CORE, &FileHeader);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
   }
 
   //
@@ -263,13 +274,6 @@ LoadDxeCore (
   //
   BuildFvHob ((EFI_PHYSICAL_ADDRESS) (UINTN) DxeCoreFv, DxeCoreFv->FvLength);
 
-  //
-  // Find DXE core file from DXE FV
-  //
-  Status = FvFindFile (DxeCoreFv, EFI_FV_FILETYPE_DXE_CORE, &FileHeader);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
 
   Status = FileFindSection (FileHeader, EFI_SECTION_PE32, (VOID **)&PeCoffImage);
   if (EFI_ERROR (Status)) {

@@ -32,7 +32,7 @@
 #include <Guid/GraphicsInfoHob.h>
 #include <Guid/AcpiTableGuid.h>
 #include <Guid/SmbiosTableGuid.h>
-
+#include <Guid/LoadedPayloadImageInfoGuid.h>
 
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
 #define LEGACY_8259_MASK_REGISTER_SLAVE   0xA1
