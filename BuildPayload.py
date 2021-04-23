@@ -351,26 +351,26 @@ def main():
       uefi_pld_elf  = out_dir + '/FV/UefiPayload.elf'
       pld_entry_elf = 'Build/UefiPayloadPkg/%s_%s/%s/UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry/%s/PayloadEntry.dll' % (target, os.environ['TOOL_CHAIN'], entry_arch, target)
       if entry_arch == 'X64':
-          raise Exception ('Not supported yet !')
+          img_fmt = 'elf64-x86-64'
       else:
-          sec_name = '.upld.uefi'
-          sec_info = '.upld_info'
-          obj_copy = 'llvm-objcopy-10'
-          upld_info_hdr =  UPLD_INFO_HEADER()
-          fp = open(pld_info, 'wb')
-          fp.write(bytearray(upld_info_hdr))
-          fp.close()
-          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--add-section', '%s=%s' % (sec_info, pld_info), pld_entry_elf, uefi_pld_elf)
-          run_process (cmd_args)
-          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--set-section-alignment', '%s=16' % sec_info, uefi_pld_elf)
-          run_process (cmd_args)
-          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--add-section', '%s=%s' % (sec_name, dxe_fv), uefi_pld_elf)
-          run_process (cmd_args)
-          cmd_args = (obj_copy, '-I', 'elf32-i386', '-O', 'elf32-i386', '--set-section-alignment', '%s=4096' % sec_name, uefi_pld_elf)
-          run_process (cmd_args)
+          img_fmt = 'elf32-i386'
 
+      sec_name = '.upld.uefi'
+      sec_info = '.upld_info'
+      obj_copy = 'llvm-objcopy-10'
+      upld_info_hdr =  UPLD_INFO_HEADER()
+      fp = open(pld_info, 'wb')
+      fp.write(bytearray(upld_info_hdr))
+      fp.close()
 
-
+      cmd_list = [
+        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--add-section', '%s=%s' % (sec_info, pld_info), pld_entry_elf, uefi_pld_elf),
+        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--set-section-alignment', '%s=16' % sec_info, uefi_pld_elf),
+        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--add-section', '%s=%s' % (sec_name, dxe_fv), uefi_pld_elf),
+        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--set-section-alignment', '%s=4096' % sec_name, uefi_pld_elf),
+      ]
+      for cmd_args in cmd_list:
+        run_process (cmd_args)
       print ('Done')
 
 
