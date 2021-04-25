@@ -383,7 +383,6 @@ BuildHobs (
 {
   EFI_STATUS                    Status;
   UINTN                         MemBase;
-  UINTN                         MemSize;
   UINTN                         HobMemBase;
   UINTN                         HobMemTop;
   DEBUG ((DEBUG_INFO, "GET_BOOTLOADER_PARAMETER() = 0x%lx\n", GET_BOOTLOADER_PARAMETER()));
@@ -393,9 +392,7 @@ BuildHobs (
   HobMemBase = ALIGN_VALUE (MemBase + PcdGet32 (PcdPayloadFdMemSize), SIZE_1MB);
   HobMemTop  = HobMemBase + FixedPcdGet32 (PcdSystemMemoryUefiRegionSize);
 
-  // DXE core assumes the memory below HOB region could be used, so include the FV region memory into HOB range.
-  MemSize    = HobMemTop - MemBase;
-  HobConstructor ((VOID *)MemBase, MemSize, (VOID *)HobMemBase, (VOID *)HobMemTop);
+  HobConstructor (MemBase, HobMemTop, HobMemBase, HobMemTop);
 
   Status = BuildHobFromBl ();
   if (EFI_ERROR (Status)) {
