@@ -22,26 +22,25 @@ from   ctypes import *
 
 sys.dont_write_bytecode = True
 
-
 class UPLD_INFO_HEADER(Structure):
     _pack_ = 1
     _fields_ = [
         ('Identifier',           ARRAY(c_char, 4)),
-        ('HeaderLength',         c_uint16),
-        ('HeaderRevision',       c_uint8),
-        ('Reserved',             c_uint8),
-        ('Revision',             c_uint64),
-        ('Capability',           c_uint64),
+        ('HeaderLength',         c_uint32),
+        ('SpecRevision',         c_uint16),
+        ('Reserved',             c_uint16),
+        ('Revision',             c_uint32),
+        ('Attribute',            c_uint32),
+        ('Capability',           c_uint32),
+        ('ProducerId',           ARRAY(c_char, 16)),
         ('ImageId',              ARRAY(c_char, 16)),
-        ('ProducerId',           ARRAY(c_char, 16))
         ]
 
     def __init__(self):
         self.Identifier     =  b'UPLD'
         self.HeaderLength   = sizeof(UPLD_INFO_HEADER)
-        self.HeaderRevision = 1
-        self.Revision       = 0x0105
-        self.Revision       = 0x0105
+        self.HeaderRevision = 0x0075
+        self.Revision       = 0x0000010105
         self.ImageId        = b'UEFI'
         self.ProducerId     = b'INTEL'
 
@@ -355,7 +354,7 @@ def main():
       else:
           img_fmt = 'elf32-i386'
 
-      sec_name = '.upld.uefi'
+      sec_name = '.upld.uefi_fv'
       sec_info = '.upld_info'
       obj_copy = 'llvm-objcopy-10'
       upld_info_hdr =  UPLD_INFO_HEADER()

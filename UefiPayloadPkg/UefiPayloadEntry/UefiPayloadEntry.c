@@ -256,6 +256,7 @@ PayloadEntry (
   EFI_PEI_HOB_POINTERS          Hob;
   EFI_HOB_GUID_TYPE            *GuidHob;
   LOADED_PAYLOAD_IMAGE_INFO    *PldImgInfo;
+  UINT32                        Idx;
 
   DEBUG ((EFI_D_ERROR, "GET_BOOTLOADER_PARAMETER() = 0x%x\n", (UINT32)GET_BOOTLOADER_PARAMETER()));
   DEBUG ((EFI_D_ERROR, "sizeof(UINTN) = 0x%x\n", sizeof(UINTN)));
@@ -267,13 +268,19 @@ PayloadEntry (
   //
   // Look through the HOB list to find UEFI payload FV base.
   //
-  GuidHob = GetNextGuidHob (&gLoadedPayloadImageInfoGuid, (VOID*)(UINTN)GET_BOOTLOADER_PARAMETER ());
+  GuidHob = GetNextGuidHob (&gLoadedPayloadImageInfoGuid, (VOID*)(UINTN)GET_BOOTLOADER_PARAMETER());
   if (GuidHob != NULL) {
     PldImgInfo  = (LOADED_PAYLOAD_IMAGE_INFO *) GET_GUID_HOB_DATA (GuidHob);
-    if (PldImgInfo->EntryNum > 0) {
-      FdBase = (UINTN)PldImgInfo->Entry[0].Base;
+    DEBUG ((DEBUG_INFO, "Image Cnt = %d\n", PldImgInfo->EntryNum));
+    for (Idx = 1; Idx < PldImgInfo->EntryNum; Idx++) {
+      DEBUG ((DEBUG_INFO, "Found loaded image '%a'\n", PldImgInfo->Entry[Idx].Name));
+      if (AsciiStrCmp (PldImgInfo->Entry[Idx].Name, ".upld.uefi_fv") == 0) {
+        FdBase = (UINTN)PldImgInfo->Entry[Idx].Base;
+        break;
+      }
     }
   }
+
   DEBUG ((EFI_D_ERROR, "Payload Image Base = 0x%x\n", FdBase));
 
   // Initialize floating point operating environment to be compliant with UEFI spec.
