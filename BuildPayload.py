@@ -22,28 +22,6 @@ from   ctypes import *
 
 sys.dont_write_bytecode = True
 
-class UPLD_INFO_HEADER(Structure):
-    _pack_ = 1
-    _fields_ = [
-        ('Identifier',           ARRAY(c_char, 4)),
-        ('HeaderLength',         c_uint32),
-        ('SpecRevision',         c_uint16),
-        ('Reserved',             c_uint16),
-        ('Revision',             c_uint32),
-        ('Attribute',            c_uint32),
-        ('Capability',           c_uint32),
-        ('ProducerId',           ARRAY(c_char, 16)),
-        ('ImageId',              ARRAY(c_char, 16)),
-        ]
-
-    def __init__(self):
-        self.Identifier     =  b'UPLD'
-        self.HeaderLength   = sizeof(UPLD_INFO_HEADER)
-        self.HeaderRevision = 0x0075
-        self.Revision       = 0x0000010105
-        self.ImageId        = b'UEFI'
-        self.ProducerId     = b'INTEL'
-
 def get_visual_studio_info ():
 
     toolchain        = ''
@@ -345,33 +323,14 @@ def main():
 
       # generate ELF UEFI payload
       out_dir = 'Build/UefiPayloadPkg/%s_%s' % (target, os.environ['TOOL_CHAIN'])
-      dxe_fv   = out_dir + '/FV/DXEFV.Fv'
-      pld_info = out_dir + '/FV/UpldInfo.bin'
-      uefi_pld_elf  = out_dir + '/FV/UefiPayload.elf'
       pld_entry_elf = 'Build/UefiPayloadPkg/%s_%s/%s/UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry/%s/PayloadEntry.dll' % (target, os.environ['TOOL_CHAIN'], entry_arch, target)
       if entry_arch == 'X64':
-          img_fmt = 'elf64-x86-64'
+          uefi_pld_elf  = out_dir + '/FV/UefiPld64.elf'
       else:
-          img_fmt = 'elf32-i386'
+          uefi_pld_elf  = out_dir + '/FV/UefiPld32.elf'
+      shutil.copyfile (pld_entry_elf, uefi_pld_elf)
 
-      sec_name = '.upld.uefi_fv'
-      sec_info = '.upld_info'
-      obj_copy = 'llvm-objcopy-10'
-      upld_info_hdr =  UPLD_INFO_HEADER()
-      fp = open(pld_info, 'wb')
-      fp.write(bytearray(upld_info_hdr))
-      fp.close()
-
-      cmd_list = [
-        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--add-section', '%s=%s' % (sec_info, pld_info), pld_entry_elf, uefi_pld_elf),
-        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--set-section-alignment', '%s=16' % sec_info, uefi_pld_elf),
-        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--add-section', '%s=%s' % (sec_name, dxe_fv), uefi_pld_elf),
-        (obj_copy, '-I', img_fmt, '-O', img_fmt, '--set-section-alignment', '%s=4096' % sec_name, uefi_pld_elf),
-      ]
-      for cmd_args in cmd_list:
-        run_process (cmd_args)
       print ('Done')
-
 
 
   buildp = sp.add_parser('build', help='build UEFI payload for coreboot or Slim Bootloader')
