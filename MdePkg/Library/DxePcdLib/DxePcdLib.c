@@ -43,7 +43,11 @@ GetPiPcdProtocol (
     // PI Pcd protocol defined in PI 1.2 vol3 should be installed before the module
     // access DynamicEx type PCD.
     //
-    Status = gBS->LocateProtocol (&gEfiPcdProtocolGuid, NULL, (VOID **) &mPiPcd);
+    if (FeaturePcdGet (PcdStandalonePcdDatabaseEnable)) {
+      Status = gBS->LocateProtocol (&gEdkiiEfiPayloadStandalonePcdProtocolGuid, NULL, (VOID **) &mPiPcd);
+    } else {
+      Status = gBS->LocateProtocol (&gEfiPcdProtocolGuid, NULL, (VOID **) &mPiPcd);
+    }
     ASSERT_EFI_ERROR (Status);
     ASSERT (mPiPcd != NULL);
   }
@@ -68,7 +72,11 @@ GetPcdProtocol (
     // PCD protocol need to be installed before the module access Dynamic type PCD.
     // But dynamic type PCD is not required in PI 1.2 specification.
     //
-    Status = gBS->LocateProtocol (&gPcdProtocolGuid, NULL, (VOID **)&mPcd);
+    if (FeaturePcdGet (PcdStandalonePcdDatabaseEnable)) {
+      Status = gBS->LocateProtocol (&gEdkiiPayloadStandalonePcdProtocolGuid, NULL, (VOID **)&mPcd);
+    } else {
+      Status = gBS->LocateProtocol (&gPcdProtocolGuid, NULL, (VOID **)&mPcd);
+    }
     ASSERT_EFI_ERROR (Status);
     ASSERT (mPcd != NULL);
   }
@@ -88,7 +96,11 @@ GetPiPcdInfoProtocolPointer (
   EFI_STATUS  Status;
 
   if (mPiPcdInfo == NULL) {
-    Status = gBS->LocateProtocol (&gEfiGetPcdInfoProtocolGuid, NULL, (VOID **)&mPiPcdInfo);
+    if (FeaturePcdGet (PcdStandalonePcdDatabaseEnable)) {
+      Status = gBS->LocateProtocol (&gEdkiiEfiPayloadGetStandalonePcdInfoProtocolGuid, NULL, (VOID **)&mPiPcdInfo);
+    } else{
+      Status = gBS->LocateProtocol (&gEfiGetPcdInfoProtocolGuid, NULL, (VOID **)&mPiPcdInfo);
+    }
     ASSERT_EFI_ERROR (Status);
     ASSERT (mPiPcdInfo != NULL);
   }
@@ -108,7 +120,11 @@ GetPcdInfoProtocolPointer (
   EFI_STATUS  Status;
 
   if (mPcdInfo == NULL) {
-    Status = gBS->LocateProtocol (&gGetPcdInfoProtocolGuid, NULL, (VOID **)&mPcdInfo);
+    if (FeaturePcdGet (PcdStandalonePcdDatabaseEnable)) {
+      Status = gBS->LocateProtocol (&gEdkiiPayloadGetStandalonePcdInfoProtocolGuid, NULL, (VOID **)&mPcdInfo);
+    } else {
+      Status = gBS->LocateProtocol (&gGetPcdInfoProtocolGuid, NULL, (VOID **)&mPcdInfo);
+    }
     ASSERT_EFI_ERROR (Status);
     ASSERT (mPcdInfo != NULL);
   }

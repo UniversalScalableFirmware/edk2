@@ -9,6 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "PlatformBootManager.h"
 #include "PlatformConsole.h"
+#include <Protocol/PldPlatformBootManager.h>
 
 VOID
 InstallReadyToLock (
@@ -152,11 +153,18 @@ PlatformBootManagerBeforeConsole (
   VOID
 )
 {
-  EFI_INPUT_KEY                Enter;
-  EFI_INPUT_KEY                F2;
-  EFI_INPUT_KEY                Down;
-  EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
+  EFI_INPUT_KEY                          Enter;
+  EFI_INPUT_KEY                          F2;
+  EFI_INPUT_KEY                          Down;
+  EFI_BOOT_MANAGER_LOAD_OPTION           BootOption;
+  EFI_STATUS                             Status;
+  EFI_PLD_PLATFORM_BOOTMANAGER_PROTOCOL  *PldPlatformBootManagerInstance;
 
+  Status = gBS->LocateProtocol (&gEfiPldPlatformBootManagerProtocolGuid, NULL, (VOID **) &PldPlatformBootManagerInstance);
+  if (!EFI_ERROR (Status)) {
+    PldPlatformBootManagerInstance->BeforeConsole();
+    return;
+  }
   //
   // Register ENTER as CONTINUE key
   //
@@ -210,9 +218,16 @@ PlatformBootManagerAfterConsole (
   VOID
 )
 {
-  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  Black;
-  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  White;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL          Black;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL          White;
+  EFI_STATUS                             Status;
+  EFI_PLD_PLATFORM_BOOTMANAGER_PROTOCOL  *PldPlatformBootManagerInstance;
 
+  Status = gBS->LocateProtocol (&gEfiPldPlatformBootManagerProtocolGuid, NULL, (VOID **) &PldPlatformBootManagerInstance);
+  if (!EFI_ERROR (Status)) {
+    PldPlatformBootManagerInstance->AfterConsole ();
+    return;
+  }
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
 
@@ -244,7 +259,14 @@ PlatformBootManagerWaitCallback (
   UINT16          TimeoutRemain
 )
 {
-  return;
+  EFI_STATUS                             Status;
+  EFI_PLD_PLATFORM_BOOTMANAGER_PROTOCOL  *PldPlatformBootManagerInstance;
+
+  Status = gBS->LocateProtocol (&gEfiPldPlatformBootManagerProtocolGuid, NULL, (VOID **) &PldPlatformBootManagerInstance);
+  if (!EFI_ERROR (Status)) {
+    PldPlatformBootManagerInstance->WaitCallback (TimeoutRemain);
+    return;
+  }
 }
 
 /**
@@ -260,6 +282,13 @@ PlatformBootManagerUnableToBoot (
   VOID
   )
 {
-  return;
+  EFI_STATUS                             Status;
+  EFI_PLD_PLATFORM_BOOTMANAGER_PROTOCOL  *PldPlatformBootManagerInstance;
+
+  Status = gBS->LocateProtocol (&gEfiPldPlatformBootManagerProtocolGuid, NULL, (VOID **) &PldPlatformBootManagerInstance);
+  if (!EFI_ERROR (Status)) {
+    PldPlatformBootManagerInstance->UnableToBoot();
+    return;
+  }
 }
 

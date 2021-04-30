@@ -63,6 +63,7 @@
   gUefiSystemTableInfoGuid
   gEfiGraphicsInfoHobGuid
   gEfiGraphicsDeviceInfoHobGuid
+  
   gPldSmbiosTableGuid
   gPldAcpiTableGuid
 

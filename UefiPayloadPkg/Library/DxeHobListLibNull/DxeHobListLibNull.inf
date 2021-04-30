@@ -1,0 +1,28 @@
+## @file
+# Dxe Hob List init Library NULL implementation.
+#
+# Copyright (c) 2021, Intel Corporation. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DxeHobListLibNull
+  MODULE_TYPE                    = BASE
+  FILE_GUID                      = ff5c7a81-ab7a-4366-8616-11c6e53247b6
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = DxeHobListLib
+  CONSTRUCTOR                    = DxeHobListLibNullConstructor
+
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[Sources]
+  DxeHobListLibNull.c

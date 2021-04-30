@@ -2,7 +2,7 @@
   Header file of PciHostBridgeLib.
 
   Copyright (C) 2016, Red Hat, Inc.
-  Copyright (c) 2016 - 2020, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -11,7 +11,7 @@
 #ifndef _PCI_HOST_BRIDGE_H
 #define _PCI_HOST_BRIDGE_H
 
-#include <Guid/PciRootBridgeInfoGuid.h>
+#include <UniversalPayload/PciRootBridges.h>
 
 typedef struct {
   ACPI_HID_DEVICE_PATH     AcpiDevicePath;
@@ -31,18 +31,16 @@ ScanForRootBridges (
 );
 
 /**
-  Scan for all root bridges from PciRootBridgeInfoHob
 
-  @param[in]  PciRootBridgeInfo    Pointer of PCI Root Bridge Info Hob
   @param[out] NumberOfRootBridges  Number of root bridges detected
 
   @retval     Pointer to the allocated PCI_ROOT_BRIDGE structure array.
 
 **/
 PCI_ROOT_BRIDGE *
-ScanForRootBridgesFromHob (
-  IN  PCI_ROOT_BRIDGE_INFO_HOB  *PciRootBridgeInfo,
-  OUT UINTN                     *NumberOfRootBridges
+RetrieveRootBridgeInfoFromHob (
+  IN  PLD_PCI_ROOT_BRIDGES  *PciRootBridgeInfo,
+  OUT UINTN                 *NumberOfRootBridges
 );
 
 /**
@@ -101,4 +99,16 @@ InitRootBridge (
   OUT PCI_ROOT_BRIDGE          *RootBus
 );
 
+/**
+  Initialize DevicePath for a PCI_ROOT_BRIDGE.
+  @param[in] HID               HID for device path
+  @param[in] UID               UID for device path
+
+  @retval A pointer to the new created device patch.
+**/
+EFI_DEVICE_PATH_PROTOCOL *
+CreateRootBridgeDevicePath (
+  IN     UINT32                   HID,
+  IN     UINT32                   UID
+);
 #endif

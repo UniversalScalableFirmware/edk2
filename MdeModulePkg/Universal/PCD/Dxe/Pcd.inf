@@ -329,10 +329,15 @@
   gEfiMdeModulePkgTokenSpaceGuid                ## SOMETIMES_CONSUMES  ## GUID
 
 [Protocols]
-  gPcdProtocolGuid                              ## PRODUCES
-  gEfiPcdProtocolGuid                           ## PRODUCES
-  gGetPcdInfoProtocolGuid                       ## SOMETIMES_PRODUCES
-  gEfiGetPcdInfoProtocolGuid                    ## SOMETIMES_PRODUCES
+  gPcdProtocolGuid                                 ## PRODUCES
+  gEfiPcdProtocolGuid                              ## PRODUCES
+  gGetPcdInfoProtocolGuid                          ## SOMETIMES_PRODUCES
+  gEfiGetPcdInfoProtocolGuid                       ## SOMETIMES_PRODUCES
+
+  gEdkiiPayloadStandalonePcdProtocolGuid           ## PRODUCES
+  gEdkiiEfiPayloadStandalonePcdProtocolGuid        ## PRODUCES
+  gEdkiiPayloadGetStandalonePcdInfoProtocolGuid    ## SOMETIMES_PRODUCES
+  gEdkiiEfiPayloadGetStandalonePcdInfoProtocolGuid ## SOMETIMES_PRODUCES
   ## NOTIFY
   ## SOMETIMES_CONSUMES
   gEdkiiVariableLockProtocolGuid
@@ -341,6 +346,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdVpdBaseAddress      ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdVpdBaseAddress64    ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetNvStoreDefaultId ## SOMETIMES_CONSUMES
+
+[FeaturePcd]
+  gEfiMdePkgTokenSpaceGuid.PcdStandalonePcdDatabaseEnable ## CONSUMES
 
 [Depex]
   TRUE
