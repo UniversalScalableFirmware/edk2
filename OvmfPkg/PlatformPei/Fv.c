@@ -78,16 +78,6 @@ PeiFvInitialization (
       );
   }
 
-  //
-  // Let PEI know about the DXE FV so it can find the DXE Core
-  //
-  PeiServicesInstallFvInfoPpi (
-    NULL,
-    (VOID *)(UINTN) PcdGet32 (PcdOvmfDxeMemFvBase),
-    PcdGet32 (PcdOvmfDxeMemFvSize),
-    NULL,
-    NULL
-    );
 
   return EFI_SUCCESS;
 }

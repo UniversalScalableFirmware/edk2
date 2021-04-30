@@ -129,34 +129,61 @@ PcdDxeInit (
   //
   // Make sure the Pcd Protocol is not already installed in the system
   //
+  if (FeaturePcdGet (PcdStandalonePcdDatabaseEnable)) {
+    ASSERT_PROTOCOL_ALREADY_INSTALLED (NULL, &gEdkiiPayloadStandalonePcdProtocolGuid);
+    BuildPcdDxeDataBase ();
 
-  ASSERT_PROTOCOL_ALREADY_INSTALLED (NULL, &gPcdProtocolGuid);
+    //
+    // Install PCD_PROTOCOL to handle dynamic type PCD
+    // Install EFI_PCD_PROTOCOL to handle dynamicEx type PCD
+    //
+    Status = gBS->InstallMultipleProtocolInterfaces (
+                    &mPcdHandle,
+                    &gEdkiiPayloadStandalonePcdProtocolGuid,     &mPcdInstance,
+                    &gEdkiiEfiPayloadStandalonePcdProtocolGuid,  &mEfiPcdInstance,
+                    NULL
+                    );
+    ASSERT_EFI_ERROR (Status);
 
-  BuildPcdDxeDataBase ();
+    //
+    // Install GET_PCD_INFO_PROTOCOL to handle dynamic type PCD
+    // Install EFI_GET_PCD_INFO_PROTOCOL to handle dynamicEx type PCD
+    //
+    Status = gBS->InstallMultipleProtocolInterfaces (
+                    &mPcdHandle,
+                    &gEdkiiPayloadGetStandalonePcdInfoProtocolGuid,     &mGetPcdInfoInstance,
+                    &gEdkiiEfiPayloadGetStandalonePcdInfoProtocolGuid,  &mEfiGetPcdInfoInstance,
+                    NULL
+                    );
+    ASSERT_EFI_ERROR (Status);
+  } else {
+    ASSERT_PROTOCOL_ALREADY_INSTALLED (NULL, &gPcdProtocolGuid);
+    BuildPcdDxeDataBase ();
 
-  //
-  // Install PCD_PROTOCOL to handle dynamic type PCD
-  // Install EFI_PCD_PROTOCOL to handle dynamicEx type PCD
-  //
-  Status = gBS->InstallMultipleProtocolInterfaces (
-                  &mPcdHandle,
-                  &gPcdProtocolGuid,     &mPcdInstance,
-                  &gEfiPcdProtocolGuid,  &mEfiPcdInstance,
-                  NULL
-                  );
-  ASSERT_EFI_ERROR (Status);
+    //
+    // Install PCD_PROTOCOL to handle dynamic type PCD
+    // Install EFI_PCD_PROTOCOL to handle dynamicEx type PCD
+    //
+    Status = gBS->InstallMultipleProtocolInterfaces (
+                    &mPcdHandle,
+                    &gPcdProtocolGuid,     &mPcdInstance,
+                    &gEfiPcdProtocolGuid,  &mEfiPcdInstance,
+                    NULL
+                    );
+    ASSERT_EFI_ERROR (Status);
 
-  //
-  // Install GET_PCD_INFO_PROTOCOL to handle dynamic type PCD
-  // Install EFI_GET_PCD_INFO_PROTOCOL to handle dynamicEx type PCD
-  //
-  Status = gBS->InstallMultipleProtocolInterfaces (
-                  &mPcdHandle,
-                  &gGetPcdInfoProtocolGuid,     &mGetPcdInfoInstance,
-                  &gEfiGetPcdInfoProtocolGuid,  &mEfiGetPcdInfoInstance,
-                  NULL
-                  );
-  ASSERT_EFI_ERROR (Status);
+    //
+    // Install GET_PCD_INFO_PROTOCOL to handle dynamic type PCD
+    // Install EFI_GET_PCD_INFO_PROTOCOL to handle dynamicEx type PCD
+    //
+    Status = gBS->InstallMultipleProtocolInterfaces (
+                    &mPcdHandle,
+                    &gGetPcdInfoProtocolGuid,     &mGetPcdInfoInstance,
+                    &gEfiGetPcdInfoProtocolGuid,  &mEfiGetPcdInfoInstance,
+                    NULL
+                    );
+    ASSERT_EFI_ERROR (Status);
+  }
 
   //
   // Register callback function upon VariableLockProtocol

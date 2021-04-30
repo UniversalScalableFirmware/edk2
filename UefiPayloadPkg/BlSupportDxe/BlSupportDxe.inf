@@ -42,7 +42,6 @@
   HobLib
 
 [Guids]
-  gPldAcpiTableGuid
   gEfiGraphicsInfoHobGuid
 
 [Pcd]

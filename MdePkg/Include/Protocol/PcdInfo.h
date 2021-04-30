@@ -19,11 +19,6 @@
 #ifndef __PCD_INFO_H__
 #define __PCD_INFO_H__
 
-extern EFI_GUID gGetPcdInfoProtocolGuid;
-
-#define GET_PCD_INFO_PROTOCOL_GUID \
-  { 0x5be40f57, 0xfa68, 0x4610, { 0xbb, 0xbf, 0xe9, 0xc5, 0xfc, 0xda, 0xd3, 0x65 } }
-
 ///
 /// The forward declaration for GET_PCD_INFO_PROTOCOL.
 ///

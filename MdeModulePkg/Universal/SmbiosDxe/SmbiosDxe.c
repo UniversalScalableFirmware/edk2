@@ -1633,7 +1633,7 @@ RetrieveSmbiosFromHob (
   SMBIOS_TABLE_3_0_ENTRY_POINT  *Smbios30Table;
   SMBIOS_STRUCTURE_POINTER      Smbios;
   EFI_HOB_GUID_TYPE             *GuidHob;
-  PLD_SMBIOS_TABLE_HOB          *SmBiosTableAdress;
+  PLD_SMBIOS_TABLE              *SmBiosTableAdress;
 
   Status = EFI_NOT_FOUND;
   //
@@ -1641,18 +1641,22 @@ RetrieveSmbiosFromHob (
   //
   GuidHob = GetFirstGuidHob (&gPldSmbios3TableGuid);
   if (GuidHob != NULL) {
-    if (sizeof (PLD_SMBIOS_TABLE_HOB) <= GET_GUID_HOB_DATA_SIZE (GuidHob)) {
-      SmBiosTableAdress = (PLD_SMBIOS_TABLE_HOB *) GET_GUID_HOB_DATA (GuidHob);
-      Smbios30Table = (SMBIOS_TABLE_3_0_ENTRY_POINT *) SmBiosTableAdress->SmBiosEntryPoint;
-      if (IsValidSmbios30Table (Smbios30Table)) {
-        Smbios.Raw = (UINT8 *) (UINTN) Smbios30Table->TableAddress;
-        Status = ParseAndAddExistingSmbiosTable (ImageHandle, Smbios, Smbios30Table->TableMaximumSize);
-        if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_ERROR, "RetrieveSmbiosFromHob: Failed to parse preinstalled tables from gPldSmbios3TableGuid Guid Hob\n"));
-          Status = EFI_UNSUPPORTED;
-        } else {
-          return EFI_SUCCESS;
+    if (sizeof (PLD_SMBIOS_TABLE) <= GET_GUID_HOB_DATA_SIZE (GuidHob)) {
+      SmBiosTableAdress = (PLD_SMBIOS_TABLE *) GET_GUID_HOB_DATA (GuidHob);
+      if (SmBiosTableAdress->PldHeader.Revision >= PLD_GENERIC_HEADER_REVISION) {
+      Smbios30Table = (SMBIOS_TABLE_3_0_ENTRY_POINT *) (UINTN) SmBiosTableAdress->SmBiosEntryPoint;
+        if (IsValidSmbios30Table (Smbios30Table)) {
+          Smbios.Raw = (UINT8 *) (UINTN) Smbios30Table->TableAddress;
+          Status = ParseAndAddExistingSmbiosTable (ImageHandle, Smbios, Smbios30Table->TableMaximumSize);
+          if (EFI_ERROR (Status)) {
+            DEBUG ((DEBUG_ERROR, "RetrieveSmbiosFromHob: Failed to parse preinstalled tables from gPldSmbios3TableGuid Guid Hob\n"));
+            Status = EFI_UNSUPPORTED;
+          } else {
+            return EFI_SUCCESS;
+          }
         }
+      } else {
+        Status = EFI_UNSUPPORTED;
       }
     }
   }
@@ -1663,17 +1667,21 @@ RetrieveSmbiosFromHob (
   //
   GuidHob = GetFirstGuidHob (&gPldSmbiosTableGuid);
   if (GuidHob != NULL) {
-    if (sizeof (PLD_SMBIOS_TABLE_HOB) <= GET_GUID_HOB_DATA_SIZE (GuidHob)) {
-      SmBiosTableAdress = (PLD_SMBIOS_TABLE_HOB *) GET_GUID_HOB_DATA (GuidHob);
-      SmbiosTable = (SMBIOS_TABLE_ENTRY_POINT *) SmBiosTableAdress->SmBiosEntryPoint;
-      if (IsValidSmbios20Table (SmbiosTable)) {
-        Smbios.Raw = (UINT8 *) (UINTN) SmbiosTable->TableAddress;
-        Status = ParseAndAddExistingSmbiosTable (ImageHandle, Smbios, SmbiosTable->TableLength);
-        if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_ERROR, "RetrieveSmbiosFromHob: Failed to parse preinstalled tables from gPldSmbiosTableGuid Guid Hob\n"));
-          Status = EFI_UNSUPPORTED;
+    if (sizeof (PLD_SMBIOS_TABLE) <= GET_GUID_HOB_DATA_SIZE (GuidHob)) {
+      SmBiosTableAdress = (PLD_SMBIOS_TABLE *) GET_GUID_HOB_DATA (GuidHob);
+      if (SmBiosTableAdress->PldHeader.Revision >= PLD_GENERIC_HEADER_REVISION) {
+      SmbiosTable = (SMBIOS_TABLE_ENTRY_POINT *) (UINTN) SmBiosTableAdress->SmBiosEntryPoint;
+        if (IsValidSmbios20Table (SmbiosTable)) {
+          Smbios.Raw = (UINT8 *) (UINTN) SmbiosTable->TableAddress;
+          Status = ParseAndAddExistingSmbiosTable (ImageHandle, Smbios, SmbiosTable->TableLength);
+          if (EFI_ERROR (Status)) {
+            DEBUG ((DEBUG_ERROR, "RetrieveSmbiosFromHob: Failed to parse preinstalled tables from gPldSmbiosTableGuid Guid Hob\n"));
+            Status = EFI_UNSUPPORTED;
+          }
+          return EFI_SUCCESS;
         }
-        return EFI_SUCCESS;
+      } else {
+        Status = EFI_UNSUPPORTED;
       }
     }
   }

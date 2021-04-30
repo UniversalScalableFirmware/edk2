@@ -25,7 +25,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/PcdLib.h>
 #include <Library/HobLib.h>
-#include <Guid/AcpiTableHob.h>
+#include <UniversalPayload/AcpiTable.h>
 
 //
 // Statements that include other files

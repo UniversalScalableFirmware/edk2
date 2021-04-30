@@ -25,7 +25,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/PcdLib.h>
 #include <Library/HobLib.h>
-#include <Guid/SmBiosTableHob.h>
+#include <UniversalPayload/SmbiosTable.h>
 
 #define SMBIOS_INSTANCE_SIGNATURE SIGNATURE_32 ('S', 'B', 'i', 's')
 typedef struct {

@@ -861,7 +861,12 @@ BuildPcdDxeDataBase (
   CopyMem (PcdDxeDb, mPcdDatabase.DxeDb, mPcdDatabase.DxeDb->Length);
   mPcdDatabase.DxeDb = PcdDxeDb;
 
-  GuidHob = GetFirstGuidHob (&gPcdDataBaseHobGuid);
+  if (FeaturePcdGet (PcdStandalonePcdDatabaseEnable)) {
+    GuidHob = NULL;
+  } else {
+    GuidHob = GetFirstGuidHob (&gPcdDataBaseHobGuid);
+  }
+
   if (GuidHob != NULL) {
 
     //

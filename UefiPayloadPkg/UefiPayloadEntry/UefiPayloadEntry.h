@@ -1,6 +1,6 @@
 /** @file
 *
-* Copyright (c) 2020 - 2021, Intel Corporation. All rights reserved.<BR>
+* Copyright (c) 2020, Intel Corporation. All rights reserved.<BR>
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
@@ -24,12 +24,17 @@
 #include <Library/BlParseLib.h>
 #include <Library/PlatformSupportLib.h>
 #include <Library/UefiCpuLib.h>
+#include <IndustryStandard/Acpi.h>
+#include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
 #include <Guid/SerialPortInfoGuid.h>
+#include <Guid/SystemTableInfoGuid.h>
 #include <Guid/MemoryMapInfoGuid.h>
+#include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/GraphicsInfoHob.h>
-#include <Guid/SmBiosTableHob.h>
-#include <Guid/AcpiTableHob.h>
-
+#include <UniversalPayload/SmbiosTable.h>
+#include <UniversalPayload/AcpiTable.h>
+#include <UniversalPayload/UniversalPayload.h>
+#include <UniversalPayload/ExtraData.h>
 
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
 #define LEGACY_8259_MASK_REGISTER_SLAVE   0xA1
@@ -80,14 +85,14 @@ UpdateStackHob (
 /**
   Build a Handoff Information Table HOB
 
-  This function initialize a HOB region from EfiMemoryBegin with length
-  EfiMemoryLength. And EfiFreeMemoryBottom and EfiFreeMemoryTop should
+  This function initialize a HOB region from EfiMemoryBegin to
+  EfiMemoryTop. And EfiFreeMemoryBottom and EfiFreeMemoryTop should
   be inside the HOB region.
 
-  @param[in] EfiMemoryBegin       Total memory start address
-  @param[in] EfiMemoryLength      Total memory length reported in handoff HOB.
-  @param[in] EfiFreeMemoryBottom  Free memory start address
-  @param[in] EfiFreeMemoryTop     Free memory end address.
+  @param[in] EfiMemoryBottom       Total memory start address
+  @param[in] EfiMemoryTop          Total memory end address.
+  @param[in] EfiFreeMemoryBottom   Free memory start address
+  @param[in] EfiFreeMemoryTop      Free memory end address.
 
   @return   The pointer to the handoff HOB table.
 
@@ -95,8 +100,8 @@ UpdateStackHob (
 EFI_HOB_HANDOFF_INFO_TABLE*
 EFIAPI
 HobConstructor (
-  IN VOID   *EfiMemoryBegin,
-  IN UINTN  EfiMemoryLength,
+  IN VOID   *EfiMemoryBottom,
+  IN VOID   *EfiMemoryTop,
   IN VOID   *EfiFreeMemoryBottom,
   IN VOID   *EfiFreeMemoryTop
   );
@@ -112,6 +117,21 @@ HobConstructor (
 EFI_STATUS
 LoadDxeCore (
   OUT PHYSICAL_ADDRESS        *DxeCoreEntryPoint
+  );
+
+/**
+  Find DXE core from FV and build DXE core HOBs.
+
+  @param[in]   FvBase                FV base to load DXE core from
+  @param[out]  DxeCoreEntryPoint     DXE core entry point
+
+  @retval EFI_SUCCESS        If it completed successfully.
+  @retval EFI_NOT_FOUND      If it failed to load DXE FV.
+**/
+EFI_STATUS
+UniversalLoadDxeCore (
+  IN  EFI_FIRMWARE_VOLUME_HEADER *DxeFv,
+  OUT PHYSICAL_ADDRESS           *DxeCoreEntryPoint
   );
 
 /**

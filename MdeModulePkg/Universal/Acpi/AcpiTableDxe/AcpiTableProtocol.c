@@ -1723,7 +1723,7 @@ InstallAcpiTableFromHob (
   UINTN                                         TableKey;
   EFI_STATUS                                    Status;
   UINTN                                         EntrySize;
-  PLD_ACPI_TABLE_HOB                            *AcpiTableAdress;
+  PLD_ACPI_TABLE                                *AcpiTableAdress;
   VOID                                          *TableToInstall;
 
   TableKey = 0;
@@ -1736,7 +1736,14 @@ InstallAcpiTableFromHob (
   if (GuidHob == NULL) {
     return EFI_NOT_FOUND;
   }
-  AcpiTableAdress = (PLD_ACPI_TABLE_HOB *) GET_GUID_HOB_DATA (GuidHob);
+
+  AcpiTableAdress = (PLD_ACPI_TABLE *) GET_GUID_HOB_DATA (GuidHob);
+  if (AcpiTableAdress->PldHeader.Revision > PLD_GENERIC_HEADER_REVISION) {
+    //
+    // Retrun if can't find the ACPI Info Hob with correct revision.
+    //
+    return EFI_NOT_FOUND;
+  }
   Rsdp = (EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER *) (UINTN) (AcpiTableAdress->Rsdp);
 
   //

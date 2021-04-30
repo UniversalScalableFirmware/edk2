@@ -52,9 +52,7 @@ READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
-!if $(UNIVERSAL_PAYLOAD) == TRUE
-  INF UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
-!else
+!if $(UNIVERSAL_PAYLOAD) == FALSE
   INF UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
 !endif
 
@@ -243,7 +241,9 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 
 [Rule.Common.SEC]
   FILE SEC = $(NAMED_GUID) {
+!if $(UNIVERSAL_PAYLOAD) == FALSE
     PE32     PE32   Align=32    $(INF_OUTPUT)/$(MODULE_NAME).efi
+!endif
   }
 
 [Rule.Common.PEI_CORE]

@@ -1,8 +1,7 @@
 ## @file
 #  This is the first module for UEFI payload.
 #
-#  Copyright (c) 2006 - 2020, Intel Corporation. All rights reserved.<BR>
-#  Copyright (c) 2017, AMD Incorporated. All rights reserved.<BR>
+#  Copyright (c) 2021, Intel Corporation. All rights reserved.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -22,7 +21,7 @@
 #
 
 [Sources]
-  UniversalUefiPayloadEntry.c
+  UniversalPayloadEntry.c
   LoadDxeCore.c
   MemoryAllocation.c
 
@@ -31,13 +30,11 @@
   X64/VirtualMemory.c
   Ia32/DxeLoadFunc.c
   Ia32/IdtVectorAsm.nasm
-  Ia32/SecEntry.nasm
 
 [Sources.X64]
   X64/VirtualMemory.h
   X64/VirtualMemory.c
   X64/DxeLoadFunc.c
-  X64/SecEntry.nasm
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -62,9 +59,10 @@
   gEfiGraphicsInfoHobGuid
   gEfiGraphicsDeviceInfoHobGuid
   gUefiAcpiBoardInfoGuid
-  gPldSmbiosTableGuid
-  gPldAcpiTableGuid
+  gEfiSmbiosTableGuid
+  gEfiAcpiTableGuid
   gUefiSerialPortInfoGuid
+  gPldExtraDataGuid
 
 [FeaturePcd.IA32]
   gEfiMdeModulePkgTokenSpaceGuid.PcdDxeIplSwitchToLongMode      ## CONSUMES

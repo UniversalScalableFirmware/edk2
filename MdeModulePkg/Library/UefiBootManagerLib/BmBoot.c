@@ -2385,7 +2385,6 @@ EfiBootManagerRefreshAllBootOption (
   This function is called to get or create the boot option for the Boot Manager Menu.
 
   The Boot Manager Menu is shown after successfully booting a boot option.
-  Assume the BootManagerMenuFile is in the same FV as the module links to this library.
 
   @param  BootOption    Return the boot option of the Boot Manager Menu
 
@@ -2437,7 +2436,7 @@ BmRegisterBootManagerMenu (
 
   if (DevicePath == NULL) {
     Data = NULL;
-    Status = GetSectionFromFv (
+    Status = GetSectionFromAnyFv (
                PcdGetPtr (PcdBootManagerMenuFile),
                EFI_SECTION_PE32,
                0,
@@ -2455,7 +2454,7 @@ BmRegisterBootManagerMenu (
     //
     // Get BootManagerMenu application's description from EFI User Interface Section.
     //
-    Status = GetSectionFromFv (
+    Status = GetSectionFromAnyFv (
                PcdGetPtr (PcdBootManagerMenuFile),
                EFI_SECTION_USER_INTERFACE,
                0,

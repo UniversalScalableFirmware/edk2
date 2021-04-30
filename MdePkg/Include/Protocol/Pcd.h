@@ -17,11 +17,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __PCD_H__
 #define __PCD_H__
 
-extern EFI_GUID gPcdProtocolGuid;
-
-#define PCD_PROTOCOL_GUID \
-  { 0x11b34006, 0xd85b, 0x4d0a, { 0xa2, 0x90, 0xd5, 0xa5, 0x71, 0x31, 0xe, 0xf7 } }
-
 #define PCD_INVALID_TOKEN_NUMBER ((UINTN) 0)
 
 

@@ -180,17 +180,6 @@ BlDxeEntryPoint (
 
   Status = EFI_SUCCESS;
 
-  //
-  // Install Acpi Table
-  //
-  GuidHob = GetFirstGuidHob (&gPldAcpiTableGuid);
-  ASSERT (GuidHob != NULL);
-  if (GuidHob != NULL) {
-    AcpiTableHob = (PLD_ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
-    DEBUG ((DEBUG_ERROR, "Install Acpi Table at 0x%lx \n", AcpiTableHob->Rsdp));
-    Status = SetPcdsUsingAcpiTable ((UINT64)(UINTN)AcpiTableHob->Rsdp);
-    ASSERT_EFI_ERROR (Status);
-  }
 
   //
   // Find the frame buffer information and update PCDs
