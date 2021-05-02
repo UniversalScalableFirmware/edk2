@@ -271,10 +271,9 @@ PayloadEntry (
   GuidHob = GetNextGuidHob (&gLoadedPayloadImageInfoGuid, (VOID*)(UINTN)GET_BOOTLOADER_PARAMETER());
   if (GuidHob != NULL) {
     PldImgInfo  = (LOADED_PAYLOAD_IMAGE_INFO *) GET_GUID_HOB_DATA (GuidHob);
-    DEBUG ((DEBUG_INFO, "Image Cnt = %d\n", PldImgInfo->EntryNum));
-    for (Idx = 1; Idx < PldImgInfo->EntryNum; Idx++) {
+    for (Idx = 0; Idx < PldImgInfo->EntryNum; Idx++) {
       DEBUG ((DEBUG_INFO, "Found loaded image '%a'\n", PldImgInfo->Entry[Idx].Name));
-      if (AsciiStrCmp (PldImgInfo->Entry[Idx].Name, ".upld.uefi_fv") == 0) {
+      if (AsciiStrCmp (PldImgInfo->Entry[Idx].Name, "uefi_fv") == 0) {
         FdBase = (UINTN)PldImgInfo->Entry[Idx].Base;
         break;
       }
