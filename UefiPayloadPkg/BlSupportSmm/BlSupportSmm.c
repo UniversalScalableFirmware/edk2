@@ -192,7 +192,7 @@ SetSmrrOnS3 (
   UINT32                SmmBase;
   UINT32                SmmSize;
 
-  if (AsmReadMsr64 (MSR_IA32_SMRR_PHYSBASE) != 0) {
+  if ((AsmReadMsr64 (MSR_IA32_SMRR_PHYSBASE) != 0) && ((AsmReadMsr64 (MSR_IA32_SMRR_PHYSMASK) & BIT11) != 0)) {
     return;
   }
 
