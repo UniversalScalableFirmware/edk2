@@ -29,9 +29,6 @@
 #include <Guid/GraphicsInfoHob.h>
 #include <Guid/AcpiTableGuid.h>
 #include <Guid/SmbiosTableGuid.h>
-#include <Guid/SmramMemoryReserve.h>
-#include <Guid/SmmRegisterInfoGuid.h>
-#include <Guid/SmmS3CommunicationInfoGuid.h>
 
 
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
@@ -130,17 +127,6 @@ VOID
 HandOffToDxeCore (
   IN EFI_PHYSICAL_ADDRESS   DxeCoreEntryPoint,
   IN EFI_PEI_HOB_POINTERS   HobList
-  );
-
-/**
-  It will build HOBs based on information from bootloaders.
-
-  @retval EFI_SUCCESS        If it completed successfully.
-  @retval Others             If it failed to build required HOBs.
-**/
-EFI_STATUS
-BuildHobs (
-  VOID
   );
 
 #endif

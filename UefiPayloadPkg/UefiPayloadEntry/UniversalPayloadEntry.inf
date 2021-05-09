@@ -22,10 +22,9 @@
 #
 
 [Sources]
-  UefiPayloadEntry.c
+  UniversalUefiPayloadEntry.c
   LoadDxeCore.c
   MemoryAllocation.c
-  BuildHobsUniversal.c
 
 [Sources.Ia32]
   X64/VirtualMemory.h

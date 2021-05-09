@@ -1,18 +1,18 @@
 ## @file
-#  Slim Bootloader parse library.
+#  Include all platform specific features which can be customized by IBV/OEM.
 #
-#  Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2019 - 2021, Intel Corporation. All rights reserved.<BR>
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = SblParseLib
-  FILE_GUID                      = DE6FB32C-52CF-4A17-A84C-B323653CB5E0
+  BASE_NAME                      = PlatformSupportLibSbl
+  FILE_GUID                      = A07C1C7A-D693-4ED3-A443-1B1011835804
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = BlParseLib
+  LIBRARY_CLASS                  = PlatformSupportLib
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -21,7 +21,7 @@
 #
 
 [Sources]
-  SblParseLib.c
+  PlatformSupportLibSbl.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -36,19 +36,15 @@
   HobLib
 
 [Guids]
-  gUefiSystemTableInfoGuid
-  gSblSerialPortInfoGuid
-  gLoaderMemoryMapInfoGuid
-  gEfiGraphicsInfoHobGuid
-  gEfiGraphicsDeviceInfoHobGuid
-  gUefiAcpiBoardInfoGuid
-
-  #gSmmInformationGuid
-  #gUefiAcpiBoardInfoGuid
-
-  #gDeviceTableHobGuid
-  #gFlashMapInfoGuid
-  #gLoaderPlatformInfoGuid
+  gDeviceTableHobGuid
+  gFlashMapInfoGuid
+  gLoaderPlatformInfoGuid
+  gEfiSmmSmramMemoryGuid
+  gPldS3CommunicationGuid
+  gSpiFlashInfoGuid
+  gSmmInformationGuid
+  gNvVariableInfoGuid
+  gPldSmmRegisterInfoGuid
 
 [Pcd]
   gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
