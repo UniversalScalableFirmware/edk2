@@ -27,6 +27,9 @@
 
 
   DEFINE UNIVERSAL_PAYLOAD            = TRUE
+  DEFINE EMU_VARIABLE_ENABLE          = FALSE
+  DEFINE SMM_SUPPORT                  = TRUE
+
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
 
@@ -36,12 +39,6 @@
   #
   DEFINE   BOOTLOADER = SBL
 
-  #
-  # TRUE:  Use EMU variable driver.
-  # FALSE: Use real variable driver.
-  #
-  DEFINE EMU_VARIABLE_ENABLE          = FALSE
-  DEFINE SMM_SUPPORT                  = TRUE
 
   #
   # CPU options
@@ -214,11 +211,13 @@
   PeCoffExtraActionLib|MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
   DebugAgentLib|MdeModulePkg/Library/DebugAgentLibNull/DebugAgentLibNull.inf
 !endif
-  PlatformSupportLib|UefiPayloadPkg/Library/PlatformSupportLibNull/PlatformSupportLibNull.inf
+
 !if $(BOOTLOADER) == "COREBOOT"
   BlParseLib|UefiPayloadPkg/Library/CbParseLib/CbParseLib.inf
+  PlatformSupportLib|UefiPayloadPkg/Library/PlatformSupportLibNull/PlatformSupportLibNull.inf
 !else
   BlParseLib|UefiPayloadPkg/Library/SblParseLib/SblParseLib.inf
+  PlatformSupportLib|UefiPayloadPkg/Library/PlatformSupportLibSbl/PlatformSupportLibSbl.inf
 !endif
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
