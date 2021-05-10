@@ -2,7 +2,7 @@
   This library will parse the coreboot table in memory and extract those required
   information.
 
-  Copyright (c) 2014 - 2020, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -10,8 +10,8 @@
 #include <Guid/GraphicsInfoHob.h>
 #include <Guid/MemoryMapInfoGuid.h>
 #include <Guid/SerialPortInfoGuid.h>
-#include <Guid/AcpiTableGuid.h>
-#include <Guid/SmbiosTableGuid.h>
+#include <Guid/SmBiosTableHob.h>
+#include <Guid/AcpiTableHob.h>
 #include <Guid/SmramMemoryReserve.h>
 #include <Guid/SmmRegisterInfoGuid.h>
 #include <Guid/SmmS3CommunicationInfoGuid.h>
@@ -73,7 +73,7 @@ ParseMemoryInfo (
 RETURN_STATUS
 EFIAPI
 ParseSmbiosTable (
-  OUT SMBIOS_TABLE_HOB     *SmbiosTable
+  OUT PLD_SMBIOS_TABLE_HOB  *SmbiosTable
   );
 
 /**
@@ -88,7 +88,7 @@ ParseSmbiosTable (
 RETURN_STATUS
 EFIAPI
 ParseAcpiTableInfo (
-  OUT ACPI_TABLE_HOB        *AcpiTableHob
+  OUT PLD_ACPI_TABLE_HOB   *AcpiTableHob
   );
 
 

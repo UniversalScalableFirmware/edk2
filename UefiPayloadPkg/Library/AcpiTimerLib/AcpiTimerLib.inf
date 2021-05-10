@@ -37,4 +37,4 @@
   DebugLib
 
 [Guids]
-  gEfiAcpiTableGuid
+  gPldAcpiTableGuid

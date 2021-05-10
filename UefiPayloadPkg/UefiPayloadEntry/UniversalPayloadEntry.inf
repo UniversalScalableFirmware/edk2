@@ -62,8 +62,8 @@
   gEfiGraphicsInfoHobGuid
   gEfiGraphicsDeviceInfoHobGuid
   gUefiAcpiBoardInfoGuid
-  gEfiSmbiosTableGuid
-  gEfiAcpiTableGuid
+  gPldSmbiosTableGuid
+  gPldAcpiTableGuid
   gUefiSerialPortInfoGuid
 
 [FeaturePcd.IA32]

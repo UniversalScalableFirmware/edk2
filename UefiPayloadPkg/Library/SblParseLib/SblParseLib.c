@@ -122,7 +122,7 @@ ParseMemoryInfo (
 RETURN_STATUS
 EFIAPI
 ParseSmbiosTable (
-  OUT SMBIOS_TABLE_HOB     *SmbiosTable
+  OUT PLD_SMBIOS_TABLE_HOB  *SmbiosTable
   )
 {
   SYSTEM_TABLE_INFO         *TableInfo;
@@ -133,7 +133,7 @@ ParseSmbiosTable (
     return RETURN_NOT_FOUND;
   }
 
-  SmbiosTable->TableAddress = TableInfo->SmbiosTableBase;
+  SmbiosTable->SmBiosEntryPoint = (EFI_PHYSICAL_ADDRESS)(UINTN)TableInfo->SmbiosTableBase;
 
   return RETURN_SUCCESS;
 }
@@ -151,7 +151,7 @@ ParseSmbiosTable (
 RETURN_STATUS
 EFIAPI
 ParseAcpiTableInfo (
-  OUT ACPI_TABLE_HOB        *AcpiTableHob
+  OUT PLD_ACPI_TABLE_HOB    *AcpiTableHob
   )
 {
   SYSTEM_TABLE_INFO         *TableInfo;
@@ -162,7 +162,7 @@ ParseAcpiTableInfo (
     return RETURN_NOT_FOUND;
   }
 
-  AcpiTableHob->TableAddress = TableInfo->AcpiTableBase;
+  AcpiTableHob->Rsdp = (EFI_PHYSICAL_ADDRESS)(UINTN)TableInfo->AcpiTableBase;
 
   return RETURN_SUCCESS;
 }

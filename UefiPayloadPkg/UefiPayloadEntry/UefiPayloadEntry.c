@@ -1,6 +1,6 @@
 /** @file
 
-  Copyright (c) 2014 - 2020, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -64,14 +64,14 @@ BuildHobFromBl (
   )
 {
   EFI_STATUS                       Status;
-  ACPI_TABLE_HOB                   AcpiTableHob;
-  ACPI_TABLE_HOB                   *NewAcpiTableHob;
-  SMBIOS_TABLE_HOB                 SmbiosTable;
-  SMBIOS_TABLE_HOB                 *NewSmbiosTable;
   EFI_PEI_GRAPHICS_INFO_HOB        GfxInfo;
   EFI_PEI_GRAPHICS_INFO_HOB        *NewGfxInfo;
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB GfxDeviceInfo;
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB *NewGfxDeviceInfo;
+  PLD_SMBIOS_TABLE_HOB             SmbiosTable;
+  PLD_SMBIOS_TABLE_HOB             *NewSmbiosTable;
+  PLD_ACPI_TABLE_HOB               AcpiTableHob;
+  PLD_ACPI_TABLE_HOB               *NewAcpiTableHob;
 
   //
   // Parse memory info and build memory HOBs
@@ -107,10 +107,10 @@ BuildHobFromBl (
   //
   Status = ParseSmbiosTable(&SmbiosTable);
   if (!EFI_ERROR (Status)) {
-    NewSmbiosTable = BuildGuidHob (&gEfiSmbiosTableGuid, sizeof (SmbiosTable));
+    NewSmbiosTable = BuildGuidHob (&gPldSmbiosTableGuid, sizeof (SmbiosTable));
     ASSERT (NewSmbiosTable != NULL);
     CopyMem (NewSmbiosTable, &SmbiosTable, sizeof (SmbiosTable));
-    DEBUG ((DEBUG_INFO, "Detected Smbios Table at 0x%lx\n", SmbiosTable.TableAddress));
+    DEBUG ((DEBUG_INFO, "Detected Smbios Table at 0x%lx\n", SmbiosTable.SmBiosEntryPoint));
   }
 
   //
@@ -119,10 +119,10 @@ BuildHobFromBl (
   Status = ParseAcpiTableInfo(&AcpiTableHob);
   ASSERT_EFI_ERROR (Status);
   if (!EFI_ERROR (Status)) {
-    NewAcpiTableHob = BuildGuidHob (&gEfiAcpiTableGuid, sizeof (AcpiTableHob));
+    NewAcpiTableHob = BuildGuidHob (&gPldAcpiTableGuid, sizeof (AcpiTableHob));
     ASSERT (NewAcpiTableHob != NULL);
     CopyMem (NewAcpiTableHob, &AcpiTableHob, sizeof (AcpiTableHob));
-    DEBUG ((DEBUG_INFO, "Detected ACPI Table at 0x%lx\n", AcpiTableHob.TableAddress));
+    DEBUG ((DEBUG_INFO, "Detected ACPI Table at 0x%lx\n", AcpiTableHob.Rsdp));
   }
 
 

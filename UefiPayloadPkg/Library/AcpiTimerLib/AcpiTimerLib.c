@@ -13,7 +13,7 @@
 #include <Library/HobLib.h>
 #include <Library/DebugLib.h>
 #include <IndustryStandard/Acpi.h>
-#include <Guid/AcpiTableGuid.h>
+#include <Guid/AcpiTableHob.h>
 
 #define ACPI_TIMER_COUNT_SIZE  BIT24
 
@@ -84,16 +84,16 @@ AcpiTimerLibConstructor (
   )
 {
   EFI_HOB_GUID_TYPE  *GuidHob;
-  ACPI_TABLE_HOB     *AcpiTableHob;
+  PLD_ACPI_TABLE_HOB *AcpiTableHob;
 
   //
   // Find the acpi table information guid hob
   //
-  GuidHob = GetFirstGuidHob (&gEfiAcpiTableGuid);
+  GuidHob = GetFirstGuidHob (&gPldAcpiTableGuid);
   ASSERT (GuidHob != NULL);
 
-  AcpiTableHob = (ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
-  mPmTimerReg = (UINTN)GetPmTimerRegister (AcpiTableHob->TableAddress);
+  AcpiTableHob = (PLD_ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
+  mPmTimerReg = (UINTN)GetPmTimerRegister ((UINT64)(UINTN)AcpiTableHob->Rsdp);
 
   return EFI_SUCCESS;
 }

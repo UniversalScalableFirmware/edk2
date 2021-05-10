@@ -176,34 +176,19 @@ BlDxeEntryPoint (
   EFI_STATUS Status;
   EFI_HOB_GUID_TYPE          *GuidHob;
   EFI_PEI_GRAPHICS_INFO_HOB  *GfxInfo;
-  ACPI_TABLE_HOB             *AcpiTableHob;
-  SMBIOS_TABLE_HOB           *SmbiosTable;
+  PLD_ACPI_TABLE_HOB         *AcpiTableHob;
 
   Status = EFI_SUCCESS;
 
   //
   // Install Acpi Table
   //
-  GuidHob = GetFirstGuidHob (&gEfiAcpiTableGuid);
+  GuidHob = GetFirstGuidHob (&gPldAcpiTableGuid);
   ASSERT (GuidHob != NULL);
   if (GuidHob != NULL) {
-    AcpiTableHob = (ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
-    DEBUG ((DEBUG_ERROR, "Install Acpi Table at 0x%lx \n", AcpiTableHob->TableAddress));
-    Status = gBS->InstallConfigurationTable (&gEfiAcpiTableGuid, (VOID *)(UINTN)AcpiTableHob->TableAddress);
-    ASSERT_EFI_ERROR (Status);
-
-    Status = SetPcdsUsingAcpiTable (AcpiTableHob->TableAddress);
-    ASSERT_EFI_ERROR (Status);
-  }
-
-  //
-  // Install Smbios Table
-  //
-  GuidHob = GetFirstGuidHob (&gEfiSmbiosTableGuid);
-  if (GuidHob != NULL) {
-    SmbiosTable = (SMBIOS_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
-    DEBUG ((DEBUG_ERROR, "Install SMBIOS Table at 0x%lx \n", SmbiosTable->TableAddress));
-    Status = gBS->InstallConfigurationTable (&gEfiSmbiosTableGuid, (VOID *)(UINTN)SmbiosTable->TableAddress);
+    AcpiTableHob = (PLD_ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
+    DEBUG ((DEBUG_ERROR, "Install Acpi Table at 0x%lx \n", AcpiTableHob->Rsdp));
+    Status = SetPcdsUsingAcpiTable ((UINT64)(UINTN)AcpiTableHob->Rsdp);
     ASSERT_EFI_ERROR (Status);
   }
 
