@@ -1562,7 +1562,7 @@ ParseAndAddExistingSmbiosTable (
     //
     // Install the table
     //
-    SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+    SmbiosHandle = Smbios.Hdr->Handle;
     Status = SmbiosAdd (
                &mPrivateData.Smbios,
                ImageHandle,
