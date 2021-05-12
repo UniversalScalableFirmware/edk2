@@ -172,11 +172,6 @@ BuildHobs (
     Hob.Raw = GET_NEXT_HOB (Hob);
   }
 
-  //
-  // Use the HOB created in payload entry instead of bootloader HOB
-  // since bootloader HOB might be overrided.
-  //
-  SET_BOOTLOADER_PARAMETER((UINTN) GetHobList ());
 
   return EFI_SUCCESS;
 }

@@ -176,10 +176,36 @@ BlDxeEntryPoint (
   EFI_STATUS Status;
   EFI_HOB_GUID_TYPE          *GuidHob;
   EFI_PEI_GRAPHICS_INFO_HOB  *GfxInfo;
-  PLD_ACPI_TABLE_HOB         *AcpiTableHob;
+
+
+  PLD_ACPI_TABLE         *AcpiTableHob;
 
   Status = EFI_SUCCESS;
 
+  //
+  // Install Acpi Table
+  //
+  GuidHob = GetFirstGuidHob (&gPldAcpiTableGuid);
+  //ASSERT (GuidHob != NULL);
+  if (GuidHob != NULL) {
+    AcpiTableHob = (PLD_ACPI_TABLE *)GET_GUID_HOB_DATA (GuidHob);
+    DEBUG ((DEBUG_ERROR, "Install Acpi Table at 0x%lx \n", AcpiTableHob->Rsdp));
+    Status = SetPcdsUsingAcpiTable ((UINT64)(UINTN)AcpiTableHob->Rsdp);
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  ACPI_BOARD_INFO            *AcpiBoardInfo;
+  //
+  // Set PcdPciExpressBaseAddress and PcdPciExpressBaseSize by HOB info
+  //
+  GuidHob = GetFirstGuidHob (&gUefiAcpiBoardInfoGuid);
+  if (GuidHob != NULL) {
+    AcpiBoardInfo = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
+    Status = PcdSet64S (PcdPciExpressBaseAddress, AcpiBoardInfo->PcieBaseAddress);
+    ASSERT_EFI_ERROR (Status);
+    Status = PcdSet64S (PcdPciExpressBaseSize, AcpiBoardInfo->PcieBaseSize);
+    ASSERT_EFI_ERROR (Status);
+  }
 
   //
   // Find the frame buffer information and update PCDs
