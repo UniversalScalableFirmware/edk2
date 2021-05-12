@@ -11,7 +11,7 @@
   goto ovmf
 )
 
-call build -p UefiPayloadPkg\UefiPayloadPkg.dsc -a X64 -D UNIVERSAL_PAYLOAD=TRUE -t VS2019 -y upllog.txt
+call build -p UefiPayloadPkg\UefiPayloadPkg.dsc -a X64 -D UNIVERSAL_PAYLOAD=TRUE -t VS2019 -y upllog.txt -D EMU_VARIABLE_ENABLE=TRUE
 if not %ERRORLEVEL% == 0 exit /b 1
 
 :entry

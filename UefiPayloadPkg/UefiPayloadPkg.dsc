@@ -296,8 +296,13 @@
   ReportStatusCodeLib|MdeModulePkg/Library/DxeReportStatusCodeLib/DxeReportStatusCodeLib.inf
 [LibraryClasses.common.SMM_CORE]
 !if $(SMM_SUPPORT) == TRUE
-  PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
+  PcdLib|MdePkg/Library/DxePcdLib/PayloadPcdLib.inf
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+  HobLib|UefiPayloadPkg/Library/DxeHobLib/DxeHobLib.inf
+!else
   HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
+!endif
+
   SmmServicesTableLib|MdeModulePkg/Library/PiSmmCoreSmmServicesTableLib/PiSmmCoreSmmServicesTableLib.inf
 
   MemoryAllocationLib|MdeModulePkg/Library/PiSmmCoreMemoryAllocationLib/PiSmmCoreMemoryAllocationLib.inf
@@ -307,8 +312,12 @@
 
 [LibraryClasses.common.DXE_SMM_DRIVER]
 !if $(SMM_SUPPORT) == TRUE
-  PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
+  PcdLib|MdePkg/Library/DxePcdLib/PayloadPcdLib.inf
+!if $(UNIVERSAL_PAYLOAD) == TRUE
+  HobLib|UefiPayloadPkg/Library/DxeHobLib/DxeHobLib.inf
+!else
   HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
+!endif
 
   MemoryAllocationLib|MdePkg/Library/SmmMemoryAllocationLib/SmmMemoryAllocationLib.inf
   SmmServicesTableLib|MdePkg/Library/SmmServicesTableLib/SmmServicesTableLib.inf

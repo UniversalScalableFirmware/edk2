@@ -27,9 +27,9 @@
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
 #include <Guid/SerialPortInfoGuid.h>
-#include <Guid/SystemTableInfoGuid.h>
+
 #include <Guid/MemoryMapInfoGuid.h>
-#include <Guid/AcpiBoardInfoGuid.h>
+
 #include <Guid/GraphicsInfoHob.h>
 #include <UniversalPayload/SmbiosTable.h>
 #include <UniversalPayload/AcpiTable.h>
