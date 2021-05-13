@@ -18,8 +18,8 @@ extern EFI_GUID gPldSmmRegisterInfoGuid;
 
 ///
 /// Reuse ACPI definition
-/// AddressSpaceId(0xC0–0xFF) is defined by OEM for MSR and other spaces
-/// 
+/// AddressSpaceId is defined by OEM for MSR and other spaces
+///
 typedef EFI_ACPI_3_0_GENERIC_ADDRESS_STRUCTURE  PLD_GENERIC_ADDRESS;
 
 #define REGISTER_ID_SMI_GBL_EN         1
