@@ -64,6 +64,14 @@ gEfiPldPlatformBootManagerProtocolGuid  = { 0xdb3fc2df, 0x7376, 0x4a8d, { 0x82, 
 #                            declaration, other packages should not.
 #
 ################################################################################
+
+[PcdsFeatureFlag]
+  ## Indicates if Universal Payload support will be enabled.
+  #   TRUE  - Universal Payload support will be enabled.
+  #   FALSE - Universal Payload support will be disabled.
+  # @Prompt Enable Universal Payload support.
+  gUefiPayloadPkgTokenSpaceGuid.PcdUniversalPayloadEnable|0|BOOLEAN|0x10000000
+
 [PcdsFixedAtBuild, PcdsDynamic, PcdsDynamicEx, PcdsPatchableInModule]
   ## Indicates the base address of the payload binary in memory
   gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001

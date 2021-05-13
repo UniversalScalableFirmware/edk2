@@ -15,6 +15,8 @@
 #include <IndustryStandard/Acpi.h>
 #include <Guid/AcpiTableHob.h>
 #include <Guid/AcpiBoardInfoGuid.h>
+#include <UniversalPayload/AcpiTable.h>
+
 #define ACPI_TIMER_COUNT_SIZE  BIT24
 
 UINT32   mPmTimerReg = 0;
@@ -83,27 +85,34 @@ AcpiTimerLibConstructor (
   VOID
   )
 {
-  EFI_HOB_GUID_TYPE  *GuidHob;
-  PLD_ACPI_TABLE_HOB *AcpiTableHob;
-
+  EFI_HOB_GUID_TYPE   *GuidHob;
+  PLD_ACPI_TABLE      *UpldAcpiTable;
+  PLD_ACPI_TABLE_HOB  *AcpiTableHob;
+  ACPI_BOARD_INFO     *AcpiBoardInfo;
+  EFI_PHYSICAL_ADDRESS Rsdp;
   //
   // Find the acpi table information guid hob
   //
   GuidHob = GetFirstGuidHob (&gPldAcpiTableGuid);
   if (GuidHob != NULL) {
-    AcpiTableHob = (PLD_ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
-    mPmTimerReg = (UINTN)GetPmTimerRegister ((UINT64)(UINTN)AcpiTableHob->Rsdp);
+    if (FeaturePcdGet (PcdUniversalPayloadEnable)) {
+      UpldAcpiTable = (PLD_ACPI_TABLE *)GET_GUID_HOB_DATA (GuidHob);
+      Rsdp = UpldAcpiTable->Rsdp;
+    } else {
+      AcpiTableHob = (PLD_ACPI_TABLE_HOB *)GET_GUID_HOB_DATA (GuidHob);
+      Rsdp = AcpiTableHob->Rsdp;
+    }
+    mPmTimerReg = (UINTN)GetPmTimerRegister (Rsdp);
   } else {
-    ACPI_BOARD_INFO    *pAcpiBoardInfo;
     //
     // Find the acpi board information guid hob
     //
     GuidHob = GetFirstGuidHob (&gUefiAcpiBoardInfoGuid);
     ASSERT (GuidHob != NULL);
-  
-    pAcpiBoardInfo = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
-  
-    mPmTimerReg = (UINT32)pAcpiBoardInfo->PmTimerRegBase;
+
+    AcpiBoardInfo = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
+
+    mPmTimerReg = (UINT32)AcpiBoardInfo->PmTimerRegBase;
   }
 
 

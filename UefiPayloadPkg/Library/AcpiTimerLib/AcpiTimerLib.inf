@@ -39,3 +39,6 @@
 [Guids]
   gPldAcpiTableGuid
   gUefiAcpiBoardInfoGuid
+
+[Pcd]
+  gUefiPayloadPkgTokenSpaceGuid.PcdUniversalPayloadEnable
