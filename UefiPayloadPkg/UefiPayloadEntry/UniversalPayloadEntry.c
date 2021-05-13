@@ -100,6 +100,71 @@ FindResourceDescriptorByRange (
 }
 
 /**
+  Find the highest below 4G memory resource descriptor for new PHIT HOB.
+
+  @param[in] Base       Memory start address
+  @param[in] Top        Memory Top.
+
+  @return     The pointer to the Resource Descriptor HOB.
+**/
+EFI_HOB_RESOURCE_DESCRIPTOR *
+FindHighestBelow4GResourceDescriptor (
+  VOID                      *HobList,
+  UINTN                     MinimalNeededSize
+  )
+{
+  EFI_PEI_HOB_POINTERS             Hob;
+  EFI_HOB_RESOURCE_DESCRIPTOR      *ResourceHob;
+  EFI_HOB_RESOURCE_DESCRIPTOR      *ReturnResourceHob;
+  ReturnResourceHob = NULL;
+
+  for (Hob.Raw = (UINT8 *) HobList; !END_OF_HOB_LIST(Hob); Hob.Raw = GET_NEXT_HOB(Hob)) {
+    //
+    // Skip all HOBs except Resource Descriptor HOBs
+    //
+    if (GET_HOB_TYPE (Hob) != EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
+      continue;
+    }
+
+    //
+    // Skip Resource Descriptor HOBs that do not describe tested system memory
+    //
+    ResourceHob = Hob.ResourceDescriptor;
+    if (ResourceHob->ResourceType != EFI_RESOURCE_SYSTEM_MEMORY) {
+      continue;
+    }
+    if ((ResourceHob->ResourceAttribute & MEMORY_ATTRIBUTE_MASK) != TESTED_MEMORY_ATTRIBUTES) {
+      continue;
+    }
+
+    //
+    // Skip Resource Descriptor HOBs that are beyond 4G
+    //
+    if ((ResourceHob->PhysicalStart + ResourceHob->ResourceLength) > BASE_4GB) {
+      continue;
+    }
+    //
+    // Skip Resource Descriptor HOBs that are too small
+    //
+    if (ResourceHob->ResourceLength < MinimalNeededSize) {
+      continue;
+    }
+
+    //
+    // Return the topest Resource Descriptor
+    //
+    if (ReturnResourceHob == NULL) {
+      ReturnResourceHob = ResourceHob;
+    } else {
+      if (ReturnResourceHob->PhysicalStart < ResourceHob->PhysicalStart) {
+        ReturnResourceHob = ResourceHob;
+      }
+    }
+  }
+  return ReturnResourceHob;
+}
+
+/**
   It will build HOBs based on information from bootloaders.
 
   @retval EFI_SUCCESS        If it completed successfully.
@@ -116,6 +181,7 @@ BuildHobs (
   EFI_PHYSICAL_ADDRESS             FreeMemoryTop;
   EFI_PHYSICAL_ADDRESS             MemoryBottom;
   EFI_PHYSICAL_ADDRESS             MemoryTop;
+  EFI_HOB_RESOURCE_DESCRIPTOR      *PhitResourceHob;
   EFI_HOB_RESOURCE_DESCRIPTOR      *ResourceHob;
 
   Hob.Raw = (UINT8 *) BootloaderParameter;
@@ -131,12 +197,21 @@ BuildHobs (
   //
   // Try to find Resource Descriptor HOB that contains Hob range EfiMemoryBottom..EfiMemoryTop
   //
-  ResourceHob = FindResourceDescriptorByRange(Hob.Raw, Hob.HandoffInformationTable->EfiMemoryBottom, Hob.HandoffInformationTable->EfiMemoryTop);
-  if (ResourceHob == NULL) {
-    return EFI_NOT_FOUND;
-  }
+  PhitResourceHob = FindResourceDescriptorByRange(Hob.Raw, Hob.HandoffInformationTable->EfiMemoryBottom, Hob.HandoffInformationTable->EfiMemoryTop);
+  if (PhitResourceHob == NULL) {
+    //
+    // Boot loader's Phit Hob is not in an available Resource Descriptor, find another Resource Descriptor for new Phit Hob
+    //
+    ResourceHob = FindHighestBelow4GResourceDescriptor(Hob.Raw, MinimalNeededSize);
+    if (ResourceHob == NULL) {
+      return EFI_NOT_FOUND;
+    }
 
-  if (ResourceHob->PhysicalStart + ResourceHob->ResourceLength - Hob.HandoffInformationTable->EfiMemoryTop >= MinimalNeededSize) {
+    MemoryBottom     = ResourceHob->PhysicalStart + ResourceHob->ResourceLength - MinimalNeededSize;
+    FreeMemoryBottom = MemoryBottom;
+    FreeMemoryTop    = ResourceHob->PhysicalStart + ResourceHob->ResourceLength;
+    MemoryTop        = FreeMemoryTop;
+  } else if (PhitResourceHob->PhysicalStart + PhitResourceHob->ResourceLength - Hob.HandoffInformationTable->EfiMemoryTop >= MinimalNeededSize) {
     //
     // New availiable Memory range in new hob is right above memory top in old hob.
     //
@@ -144,8 +219,7 @@ BuildHobs (
     FreeMemoryBottom = Hob.HandoffInformationTable->EfiMemoryTop;
     FreeMemoryTop    = FreeMemoryBottom + MinimalNeededSize;
     MemoryTop        = FreeMemoryTop;
-    HobConstructor ((VOID *) (UINTN) MemoryBottom, (VOID *) (UINTN) MemoryTop, (VOID *) (UINTN) FreeMemoryBottom, (VOID *) (UINTN) FreeMemoryTop);
-  } else if (Hob.HandoffInformationTable->EfiMemoryBottom - ResourceHob->PhysicalStart >= MinimalNeededSize) {
+  } else if (Hob.HandoffInformationTable->EfiMemoryBottom - PhitResourceHob->PhysicalStart >= MinimalNeededSize) {
     //
     // New availiable Memory range in new hob is right below memory bottom in old hob.
     //
@@ -153,14 +227,13 @@ BuildHobs (
     FreeMemoryBottom = MemoryBottom;
     FreeMemoryTop    = Hob.HandoffInformationTable->EfiMemoryBottom;
     MemoryTop        = Hob.HandoffInformationTable->EfiMemoryTop;
-    HobConstructor ((VOID *) (UINTN) MemoryBottom, (VOID *) (UINTN) MemoryTop, (VOID *) (UINTN) FreeMemoryBottom, (VOID *) (UINTN) FreeMemoryTop);
   } else {
     //
     // In the Resource Descriptor HOB contains boot loader Hob, there is no enough free memory size for payload hob
     //
     return EFI_OUT_OF_RESOURCES;
   }
-
+  HobConstructor ((VOID *) (UINTN) MemoryBottom, (VOID *) (UINTN) MemoryTop, (VOID *) (UINTN) FreeMemoryBottom, (VOID *) (UINTN) FreeMemoryTop);
   //
   // Since payload created new Hob, move all hobs except PHIT from boot loader hob list.
   //
@@ -171,7 +244,6 @@ BuildHobs (
     }
     Hob.Raw = GET_NEXT_HOB (Hob);
   }
-
 
   return EFI_SUCCESS;
 }
