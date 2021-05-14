@@ -302,10 +302,10 @@ INF  OvmfPkg/PlatformBootManagerDriver/PlatformBootManagerDriver.inf
 INF  OvmfPkg/SmmAccess/SmmAccess2Dxe.inf
 INF  OvmfPkg/SmmControl2Dxe/SmmControl2Dxe.inf
 INF  OvmfPkg/CpuS3DataDxe/CpuS3DataDxe.inf
-INF  MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
-INF  MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
+#INF  MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
+#INF  MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
 INF  OvmfPkg/CpuHotplugSmm/CpuHotplugSmm.inf
-INF  UefiCpuPkg/CpuIo2Smm/CpuIo2Smm.inf
+#INF  UefiCpuPkg/CpuIo2Smm/CpuIo2Smm.inf
 INF  MdeModulePkg/Universal/LockBox/SmmLockBox/SmmLockBox.inf
 INF  UefiCpuPkg/PiSmmCpuDxeSmm/PiSmmCpuDxeSmm.inf
 
@@ -313,9 +313,9 @@ INF  UefiCpuPkg/PiSmmCpuDxeSmm/PiSmmCpuDxeSmm.inf
 # Variable driver stack (SMM)
 #
 INF  OvmfPkg/QemuFlashFvbServicesRuntimeDxe/FvbServicesSmm.inf
-INF  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteSmm.inf
-INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmm.inf
-INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.inf
+#INF  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteSmm.inf
+#INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmm.inf
+#INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.inf
 
 !else
 
