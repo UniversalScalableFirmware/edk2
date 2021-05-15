@@ -44,8 +44,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 typedef UINT64  Elf64_Addr;
 typedef UINT16  Elf64_Half;
 typedef UINT64  Elf64_Off;
-typedef INT32    Elf64_Sword;
-typedef INT64    Elf64_Sxword;
+typedef INT32   Elf64_Sword;
+typedef INT64   Elf64_Sxword;
 typedef UINT32  Elf64_Word;
 typedef UINT64  Elf64_Lword;
 typedef UINT64  Elf64_Xword;
@@ -147,7 +147,7 @@ typedef struct {
 } Elf64_Rela;
 
 /* Macros for accessing the fields of r_info. */
-#define ELF64_R_SYM(info)  ((info) >> 32)
+#define ELF64_R_SYM(info)  ((UINT32) RShiftU64 ((info), 32))
 #define ELF64_R_TYPE(info)  ((info) & 0xffffffffL)
 
 /* Macro for constructing r_info from field values. */

@@ -1,30 +1,12 @@
 /** @file
   ELF library
 
-  Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2019 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
 #include "ElfLibInternal.h"
-
-STATIC
-BOOLEAN
-IsTextShdr (
-  Elf64_Shdr *Shdr
-  )
-{
-  return (BOOLEAN) ((Shdr->sh_flags & (SHF_WRITE | SHF_ALLOC)) == SHF_ALLOC);
-}
-
-STATIC
-BOOLEAN
-IsDataShdr (
-  Elf64_Shdr *Shdr
-  )
-{
-  return (BOOLEAN) (Shdr->sh_flags & (SHF_WRITE | SHF_ALLOC)) == (SHF_ALLOC | SHF_WRITE);
-}
 
 Elf64_Shdr *
 GetElf64SectionByIndex (
@@ -32,30 +14,266 @@ GetElf64SectionByIndex (
   IN  UINT32                Index
   )
 {
-  Elf64_Ehdr        *Elf64Hdr;
+  Elf64_Ehdr        *Ehdr;
 
-  Elf64Hdr  = (Elf64_Ehdr *)ImageBase;
-  if (Index >= Elf64Hdr->e_shnum) {
+  Ehdr  = (Elf64_Ehdr *)ImageBase;
+  if (Index >= Ehdr->e_shnum) {
     return NULL;
   }
 
-  return (Elf64_Shdr *)(ImageBase + Elf64Hdr->e_shoff + Index * Elf64Hdr->e_shentsize);
+  return (Elf64_Shdr *)(ImageBase + Ehdr->e_shoff + Index * Ehdr->e_shentsize);
 }
 
 Elf64_Phdr *
 GetElf64SegmentByIndex (
   IN  UINT8                 *ImageBase,
   IN  UINT32                Index
-)
+  )
 {
-  Elf64_Ehdr        *Elf64Hdr;
+  Elf64_Ehdr        *Ehdr;
 
-  Elf64Hdr  = (Elf64_Ehdr *)ImageBase;
-  if (Index >= Elf64Hdr->e_phnum) {
+  Ehdr  = (Elf64_Ehdr *)ImageBase;
+  if (Index >= Ehdr->e_phnum) {
     return NULL;
   }
 
-  return (Elf64_Phdr *)(ImageBase + Elf64Hdr->e_phoff + Index * Elf64Hdr->e_phentsize);
+  return (Elf64_Phdr *)(ImageBase + Ehdr->e_phoff + Index * Ehdr->e_phentsize);
+}
+
+Elf64_Shdr *
+GetElf64SectionByRange (
+  IN  UINT8                 *ImageBase,
+  IN  UINT64                Offset,
+  IN  UINT64                Size
+  )
+{
+  UINT32                    Index;
+  Elf64_Ehdr                *Ehdr;
+  Elf64_Shdr                *Shdr;
+
+  Ehdr = (Elf64_Ehdr *)ImageBase;
+
+  Shdr = (Elf64_Shdr *) (ImageBase + Ehdr->e_shoff);
+  for (Index = 0; Index < Ehdr->e_shnum; Index++) {
+    if ((Shdr->sh_offset == Offset) && (Shdr->sh_size == Size)) {
+      return Shdr;
+    }
+    Shdr = ELF_NEXT_ENTRY (Elf64_Shdr, Shdr, Ehdr->e_shentsize);
+  }
+  return NULL;
+}
+
+EFI_STATUS
+ProcessRelocation64 (
+  IN  Elf64_Rela            *Rela,
+  IN  UINT64                RelaSize,
+  IN  UINT64                RelaEntrySize,
+  IN  UINT64                RelaType,
+  IN  INTN                  Delta,
+  IN  BOOLEAN               DynamicLinking
+  )
+{
+  UINTN                     Index;
+  UINT64                    *Ptr;
+  UINT32                    Type;
+
+  for ( Index = 0
+      ; MultU64x64 (RelaEntrySize, Index) < RelaSize
+      ; Index++, Rela = ELF_NEXT_ENTRY (Elf64_Rela, Rela, RelaEntrySize)
+      ) {
+    //
+    // r_offset is the virtual address of the storage unit affected by the relocation.
+    //
+    Ptr = (UINT64 *)(UINTN)(Rela->r_offset + Delta);
+    Type  = ELF64_R_TYPE(Rela->r_info);
+    switch (Type) {
+      case R_X86_64_NONE:
+      case R_X86_64_PC32:
+      case R_X86_64_PLT32:
+      case R_X86_64_GOTPCREL:
+      case R_X86_64_GOTPCRELX:
+      case R_X86_64_REX_GOTPCRELX:
+        break;
+
+      case R_X86_64_64:
+        if (DynamicLinking) {
+          //
+          // Dynamic section doesn't contain entries of this type.
+          //
+          DEBUG ((DEBUG_INFO, "Unsupported relocation type %02X\n", Type));
+          ASSERT (FALSE);
+        } else {
+          *Ptr += Delta;
+        }
+        break;
+
+      case R_X86_64_32:
+        //
+        // Dynamic section doesn't contain entries of this type.
+        //
+        DEBUG ((DEBUG_INFO, "Unsupported relocation type %02X\n", Type));
+        ASSERT (FALSE);
+        break;
+
+      case R_X86_64_RELATIVE:
+        if (DynamicLinking) {
+          //
+          // A: Represents the addend used to compute the value of the relocatable field.
+          // B: Represents the base address at which a shared object has been loaded into memory during execution.
+          //    Generally, a shared object is built with a 0 base virtual address, but the execution address will be different.
+          // 
+          // B (Base Address) in ELF spec is slightly different:
+          //   An executable or shared object file's base address (on platforms that support the concept) is calculated during
+          //   execution from three values: the virtual memory load address, the maximum page size, and the lowest virtual address
+          //   of a program's loadable segment. To compute the base address, one determines the memory address associated with the
+          //   lowest p_vaddr value for a PT_LOAD segment. This address is truncated to the nearest multiple of the maximum page size.
+          //   The corresponding p_vaddr value itself is also truncated to the nearest multiple of the maximum page size.
+          //
+          //   *** The base address is the difference between the truncated memory address and the truncated p_vaddr value. ***
+          //
+          // Delta in this function is B.
+          //
+          // Calculation: B + A
+          //
+          if (RelaType == SHT_RELA) {
+            ASSERT (*Ptr == 0);
+            *Ptr = Delta + Rela->r_addend;
+          } else {
+            //
+            // A is stored in the field of relocation for REL type.
+            //
+            *Ptr = Delta + *Ptr;
+          }
+        } else {
+          //
+          // non-Dynamic section doesn't contain entries of this type.
+          //
+          DEBUG ((DEBUG_INFO, "Unsupported relocation type %02X\n", Type));
+          ASSERT (FALSE);
+        }
+        break;
+
+      default:
+        DEBUG ((DEBUG_INFO, "Unsupported relocation type %02X\n", Type));
+    }
+  }
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+RelocateElf64Dynamic (
+  IN    ELF_IMAGE_CONTEXT      *ElfCt
+  )
+{
+  UINT32                       Index;
+  Elf64_Phdr                   *Phdr;
+  Elf64_Shdr                   *DynShdr;
+  Elf64_Shdr                   *RelShdr;
+  Elf64_Dyn                    *Dyn;
+  UINT64                       RelaOffset;
+  UINT64                       RelaCount;
+  UINT64                       RelaSize;
+  UINT64                       RelaEntrySize;
+  UINT64                       RelaType;
+
+  //
+  // 1. Locate the dynamic section.
+  //
+  // If an object file participates in dynamic linking, its program header table
+  // will have an element of type PT_DYNAMIC.
+  // This ``segment'' contains the .dynamic section. A special symbol, _DYNAMIC,
+  // labels the section, which contains an array of Elf32_Dyn or Elf64_Dyn.
+  //
+  DynShdr = NULL;
+  for (Index = 0; Index < ElfCt->PhNum; Index++) {
+    Phdr = GetElf64SegmentByIndex (ElfCt->FileBase, Index);
+    ASSERT (Phdr != NULL);
+    if (Phdr->p_type == PT_DYNAMIC) {
+      //
+      // Verify the existence of the dynamic section.
+      //
+      DynShdr = GetElf64SectionByRange (ElfCt->FileBase, Phdr->p_offset, Phdr->p_filesz);
+      break;
+    }
+  }
+
+  //
+  // It's abnormal a DYN ELF doesn't contain a dynamic section.
+  //
+  ASSERT (DynShdr != NULL);
+  if (DynShdr == NULL) {
+    return EFI_UNSUPPORTED;
+  }
+  ASSERT (DynShdr->sh_type == SHT_DYNAMIC);
+  ASSERT (DynShdr->sh_entsize >= sizeof (*Dyn));
+
+  //
+  // 2. Locate the relocation section from the dynamic section.
+  //
+  RelaOffset    = 0;
+  RelaSize      = 0;
+  RelaCount     = 0;
+  RelaEntrySize = 0;
+  RelaType      = 0;
+  for ( Index = 0, Dyn = (Elf64_Dyn *) (ElfCt->FileBase + DynShdr->sh_offset)
+      ; Index < DivU64x64Remainder (DynShdr->sh_size, DynShdr->sh_entsize, NULL)
+      ; Index++, Dyn = ELF_NEXT_ENTRY (Elf64_Dyn, Dyn, DynShdr->sh_entsize)
+      ) {
+    switch (Dyn->d_tag) {
+      case DT_RELA:
+      case DT_REL:
+        //
+        // DT_REL represent program virtual addresses.
+        // A file's virtual addresses might not match the memory virtual addresses during execution.
+        // When interpreting addresses contained in the dynamic structure, the dynamic linker computes actual addresses,
+        // based on the original file value and the memory base address.
+        // For consistency, files do not contain relocation entries to ``correct'' addresses in the dynamic structure.
+        //
+        RelaOffset = Dyn->d_un.d_ptr - (UINTN) ElfCt->PreferredImageAddress;
+        RelaType   = (Dyn->d_tag == DT_RELA) ? SHT_RELA: SHT_REL;
+        break;
+      case DT_RELACOUNT:
+      case DT_RELCOUNT:
+        RelaCount = Dyn->d_un.d_val;
+        break;
+      case DT_RELENT:
+      case DT_RELAENT:
+        RelaEntrySize = Dyn->d_un.d_val;
+        break;
+      case DT_RELSZ:
+      case DT_RELASZ:
+        RelaSize = Dyn->d_un.d_val;
+        break;
+      default:
+        break;
+    }
+  }
+  
+  if (RelaCount == 0) {
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // Verify the existence of the relocation section.
+  //
+  RelShdr = GetElf64SectionByRange (ElfCt->FileBase, RelaOffset, RelaSize);
+  ASSERT (RelShdr != NULL);
+  if (RelShdr == NULL) {
+    return EFI_UNSUPPORTED;
+  }
+  ASSERT (RelShdr->sh_type == RelaType);
+  ASSERT (RelShdr->sh_entsize == RelaEntrySize);
+
+  //
+  // 3. Process the relocation section.
+  //
+  ProcessRelocation64 (
+    (Elf64_Rela *) (ElfCt->FileBase + RelShdr->sh_offset),
+    RelShdr->sh_size, RelShdr->sh_entsize, RelShdr->sh_type,
+    (UINTN) ElfCt->ImageAddress - (UINTN) ElfCt->PreferredImageAddress,
+    TRUE
+    );
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -63,60 +281,60 @@ RelocateElf64Sections  (
   IN    ELF_IMAGE_CONTEXT      *ElfCt
   )
 {
-  Elf64_Ehdr       *Elf64Hdr;
-  Elf64_Shdr       *Rel64Shdr;
-  Elf64_Shdr       *Sec64Shdr;
-  Elf64_Rel        *Rel64Entry;
-  UINT8            *CurPtr;
+  EFI_STATUS       Status;
+  Elf64_Ehdr       *Ehdr;
+  Elf64_Shdr       *RelShdr;
+  Elf64_Shdr       *Shdr;
   UINT32           Index;
-  UINT64           RelIdx;
-  UINT32           *Ptr32;
-  UINT64           *Ptr64;
-  UINT32           RelType;
   UINTN            Delta;
 
-  Elf64Hdr  = (Elf64_Ehdr *)ElfCt->FileBase;
-  if (Elf64Hdr->e_machine != EM_X86_64) {
+  Ehdr  = (Elf64_Ehdr *)ElfCt->FileBase;
+  if (Ehdr->e_machine != EM_X86_64) {
     return EFI_UNSUPPORTED;
   }
 
-  Delta  = (UINTN) ElfCt->ImageAddress - (UINTN) ElfCt->PreferredImageAddress;
-  CurPtr = ElfCt->FileBase + Elf64Hdr->e_shoff;
-  for (Index = 0; Index < Elf64Hdr->e_shnum; Index++) {
-    Rel64Shdr = (Elf64_Shdr *)CurPtr;
-    CurPtr  = CurPtr + Elf64Hdr->e_shentsize;
-    if ((Rel64Shdr->sh_type == SHT_REL) || (Rel64Shdr->sh_type == SHT_RELA)) {
-      Sec64Shdr = GetElf64SectionByIndex (ElfCt->FileBase, Rel64Shdr->sh_info);
-      if (!IsTextShdr(Sec64Shdr) && !IsDataShdr(Sec64Shdr)) {
-        continue;
-      }
+  Delta = (UINTN) ElfCt->ImageAddress - (UINTN) ElfCt->PreferredImageAddress;
+  ElfCt->EntryPoint = (UINTN)(Ehdr->e_entry + Delta);
 
-      for (RelIdx = 0; RelIdx < Rel64Shdr->sh_size; RelIdx += Rel64Shdr->sh_entsize) {
-        Rel64Entry = (Elf64_Rel *)((UINT8*)Elf64Hdr + Rel64Shdr->sh_offset + RelIdx);
-        RelType = ELF64_R_TYPE(Rel64Entry->r_info);
-        switch (RelType) {
-          case R_X86_64_NONE:
-          case R_X86_64_PC32:
-          case R_X86_64_PLT32:
-          case R_X86_64_GOTPCREL:
-          case R_X86_64_GOTPCRELX:
-          case R_X86_64_REX_GOTPCRELX:
-            break;
-          case R_X86_64_64:
-            Ptr64   = (UINT64 *)(UINTN)(Rel64Entry->r_offset + Delta);
-            *Ptr64 += Delta;
-            break;
-          case R_X86_64_32:
-            Ptr32   = (UINT32 *)(UINTN)(Rel64Entry->r_offset + Delta);
-            *Ptr32 += (UINT32)Delta;
-            break;
-          default:
-            DEBUG ((DEBUG_INFO, "Unsupported relocation type %02X\n", RelType));
-        }
-      }
+  //
+  // 1. Relocate dynamic ELF using the relocation section pointed by dynamic section
+  //
+  if (Ehdr->e_type == ET_DYN) {
+    DEBUG ((DEBUG_INFO, "DYN ELF: Relocate using dynamic sections...\n"));
+    Status = RelocateElf64Dynamic (ElfCt);
+    ASSERT_EFI_ERROR (Status);
+    return Status;
+  }
+
+  //
+  // 2. Executable ELF: Fix up the delta between actual image address and preferred image address.
+  //
+  //  Linker already fixed up EXEC ELF based on the preferred image address.
+  //  A ELF loader in modern OS only loads it into the preferred image address.
+  //  The below relocation is unneeded in that case.
+  //  But the ELF loader in firmware supports to load the image to a different address.
+  //  The below relocation is needed in this case.
+  //
+  DEBUG ((DEBUG_INFO, "EXEC ELF: Fix actual/preferred base address delta ...\n"));
+  for ( Index = 0, RelShdr = (Elf64_Shdr *) (ElfCt->FileBase + Ehdr->e_shoff)
+      ; Index < Ehdr->e_shnum
+      ; Index++,   RelShdr = ELF_NEXT_ENTRY (Elf64_Shdr, RelShdr, Ehdr->e_shentsize)
+      ) {
+    if ((RelShdr->sh_type != SHT_REL) && (RelShdr->sh_type != SHT_RELA)) {
+      continue;
+    }
+    Shdr = GetElf64SectionByIndex (ElfCt->FileBase, RelShdr->sh_info);
+    if ((Shdr->sh_flags & SHF_ALLOC) == SHF_ALLOC) {
+      //
+      // Only fix up sections that occupy memory during process execution.
+      //
+      ProcessRelocation64 (
+        (Elf64_Rela *)((UINT8*)Ehdr + RelShdr->sh_offset),
+        RelShdr->sh_size, RelShdr->sh_entsize, RelShdr->sh_type,
+        Delta, FALSE
+        );
     }
   }
-  ElfCt->EntryPoint = (UINTN)(Elf64Hdr->e_entry + Delta);
 
   return EFI_SUCCESS;
 }
@@ -139,9 +357,8 @@ LoadElf64Image (
   IN    ELF_IMAGE_CONTEXT    *ElfCt
   )
 {
-  Elf64_Ehdr    *Elf64Hdr;
-  Elf64_Phdr    *ProgramHdr;
-  Elf64_Phdr    *ProgramHdrBase;
+  Elf64_Ehdr    *Ehdr;
+  Elf64_Phdr    *Phdr;
   UINT16        Index;
   UINTN         Delta;
 
@@ -150,16 +367,17 @@ LoadElf64Image (
   //
   // Per the sprit of ELF, loading to memory only consumes info from program headers.
   //
-  Elf64Hdr       = (Elf64_Ehdr *)ElfCt->FileBase;
-  ProgramHdrBase = (Elf64_Phdr *)(ElfCt->FileBase + Elf64Hdr->e_phoff);
-  for (Index = 0; Index < Elf64Hdr->e_phnum; Index++) {
-    ProgramHdr = (Elf64_Phdr *)((UINT8 *)ProgramHdrBase + Index * Elf64Hdr->e_phentsize);
+  Ehdr = (Elf64_Ehdr *)ElfCt->FileBase;
 
+  for ( Index = 0, Phdr = (Elf64_Phdr *)(ElfCt->FileBase + Ehdr->e_phoff)
+      ; Index < Ehdr->e_phnum
+      ; Index++, Phdr = ELF_NEXT_ENTRY (Elf64_Phdr, Phdr, Ehdr->e_phentsize)
+      ) {
     //
     // Skip segments that don't require load (type tells, or size is 0)
     //
-    if ((ProgramHdr->p_type != PT_LOAD) ||
-        (ProgramHdr->p_memsz == 0)) {
+    if ((Phdr->p_type != PT_LOAD) ||
+        (Phdr->p_memsz == 0)) {
       continue;
     }
 
@@ -167,9 +385,9 @@ LoadElf64Image (
     // The memory offset of segment relative to the image base
     // Note: CopyMem() does nothing when the dst equals to src.
     //
-    Delta = (UINTN) ProgramHdr->p_paddr - (UINTN) ElfCt->PreferredImageAddress;
-    CopyMem (ElfCt->ImageAddress + Delta, ElfCt->FileBase + (UINTN) ProgramHdr->p_offset, (UINTN) ProgramHdr->p_filesz);
-    ZeroMem (ElfCt->ImageAddress + Delta + (UINTN) ProgramHdr->p_filesz, (UINTN) (ProgramHdr->p_memsz - ProgramHdr->p_filesz));
+    Delta = (UINTN) Phdr->p_paddr - (UINTN) ElfCt->PreferredImageAddress;
+    CopyMem (ElfCt->ImageAddress + Delta, ElfCt->FileBase + (UINTN) Phdr->p_offset, (UINTN) Phdr->p_filesz);
+    ZeroMem (ElfCt->ImageAddress + Delta + (UINTN) Phdr->p_filesz, (UINTN) (Phdr->p_memsz - Phdr->p_filesz));
   }
 
   //

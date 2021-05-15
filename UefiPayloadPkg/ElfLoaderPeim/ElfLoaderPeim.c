@@ -54,7 +54,7 @@ PeiLoadFileLoadElf (
   CHAR8              *SectionName;
   UINTN              Offset;
   UINTN              Size;
-  UINTN              ExtraDataCount;
+  UINT32             ExtraDataCount;
   UINTN              Instance;
 
   //
@@ -133,7 +133,7 @@ PeiLoadFileLoadElf (
     }
   }
 
-  if (Context.ReloadRequired) {
+  if (Context.ReloadRequired || Context.PreferredImageAddress != Context.FileBase) {
     Context.ImageAddress = AllocatePages (EFI_SIZE_TO_PAGES (Context.ImageSize));
   } else {
     Context.ImageAddress = Context.FileBase;

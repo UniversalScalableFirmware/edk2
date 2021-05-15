@@ -1,7 +1,7 @@
 /** @file
   ELF library
 
-  Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2019 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -17,6 +17,8 @@
 #include "Elf32.h"
 #include "Elf64.h"
 
+#define ELF_NEXT_ENTRY(EntryType, Current, EntrySize) \
+              ((EntryType *) ((UINT8 *)Current + EntrySize))
 
 Elf32_Shdr *
 GetElf32SectionByIndex (

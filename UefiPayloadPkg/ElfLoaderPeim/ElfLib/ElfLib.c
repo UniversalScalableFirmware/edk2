@@ -1,7 +1,7 @@
 /** @file
   ELF library
 
-  Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2019 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -225,7 +225,7 @@ EFIAPI
 ParseElfImage (
   IN  VOID                 *ImageBase,
   OUT ELF_IMAGE_CONTEXT    *ElfCt
-)
+  )
 {
   Elf32_Ehdr     *Elf32Hdr;
   Elf64_Ehdr     *Elf64Hdr;
@@ -254,22 +254,28 @@ ParseElfImage (
   Elf32Hdr = (Elf32_Ehdr *)ElfCt->FileBase;
   ElfCt->EiClass = Elf32Hdr->e_ident[EI_CLASS];
   if (ElfCt->EiClass == ELFCLASS32) {
+    if ((Elf32Hdr->e_type != ET_EXEC) && (Elf32Hdr->e_type != ET_DYN)) {
+      return (ElfCt->ParseStatus = EFI_UNSUPPORTED);
+    }
     Elf32Shdr = (Elf32_Shdr *)GetElf32SectionByIndex (ElfCt->FileBase, Elf32Hdr->e_shstrndx);
     if (Elf32Shdr == NULL) {
       return (ElfCt->ParseStatus = EFI_UNSUPPORTED);
     }
-    ElfCt->EntryPoint = (UINTN)(ElfCt->FileBase + Elf32Hdr->e_entry);
+    ElfCt->EntryPoint = (UINTN)Elf32Hdr->e_entry;
     ElfCt->ShNum      = Elf32Hdr->e_shnum;
     ElfCt->PhNum      = Elf32Hdr->e_phnum;
     ElfCt->ShStrLen   = Elf32Shdr->sh_size;
     ElfCt->ShStrOff   = Elf32Shdr->sh_offset;
   } else {
     Elf64Hdr  = (Elf64_Ehdr *)Elf32Hdr;
+    if ((Elf64Hdr->e_type != ET_EXEC) && (Elf64Hdr->e_type != ET_DYN)) {
+      return (ElfCt->ParseStatus = EFI_UNSUPPORTED);
+    }
     Elf64Shdr = (Elf64_Shdr *)GetElf64SectionByIndex (ElfCt->FileBase, Elf64Hdr->e_shstrndx);
     if (Elf64Shdr == NULL) {
       return (ElfCt->ParseStatus = EFI_UNSUPPORTED);
     }
-    ElfCt->EntryPoint = (UINTN)(ElfCt->FileBase + Elf64Hdr->e_entry);
+    ElfCt->EntryPoint = (UINTN)Elf64Hdr->e_entry;
     ElfCt->ShNum      = Elf64Hdr->e_shnum;
     ElfCt->PhNum      = Elf64Hdr->e_phnum;
     ElfCt->ShStrLen   = (UINT32)Elf64Shdr->sh_size;
@@ -289,7 +295,7 @@ ParseElfImage (
     if (SegInfo.PtType != PT_LOAD) {
       continue;
     }
-    
+
     if (SegInfo.MemLen != SegInfo.Length) {
       //
       // Not enough space to execute at current location.
@@ -297,11 +303,11 @@ ParseElfImage (
       ElfCt->ReloadRequired = TRUE;
     }
 
-    if (Base > (SegInfo.MemAddr & ~(SegInfo.Alignment - 1))) {
-      Base = SegInfo.MemAddr & ~(SegInfo.Alignment - 1);
+    if (Base > (SegInfo.MemAddr & ~(EFI_PAGE_SIZE - 1))) {
+      Base = SegInfo.MemAddr & ~(EFI_PAGE_SIZE - 1);
     }
-    if (End < ALIGN_VALUE (SegInfo.MemAddr + SegInfo.MemLen, SegInfo.Alignment) - 1) {
-      End = ALIGN_VALUE (SegInfo.MemAddr + SegInfo.MemLen, SegInfo.Alignment) - 1;
+    if (End < ALIGN_VALUE (SegInfo.MemAddr + SegInfo.MemLen, EFI_PAGE_SIZE) - 1) {
+      End = ALIGN_VALUE (SegInfo.MemAddr + SegInfo.MemLen, EFI_PAGE_SIZE) - 1;
     }
   }
   //
