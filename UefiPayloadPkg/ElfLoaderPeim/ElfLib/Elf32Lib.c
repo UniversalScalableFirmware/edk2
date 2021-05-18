@@ -201,7 +201,7 @@ RelocateElf32Dynamic (
   //
   // 2. Locate the relocation section from the dynamic section.
   //
-  RelaOffset    = 0;
+  RelaOffset    = MAX_UINT32;
   RelaSize      = 0;
   RelaCount     = 0;
   RelaEntrySize = 0;
@@ -240,8 +240,14 @@ RelocateElf32Dynamic (
     }
   }
   
-  if (RelaCount == 0) {
-    return EFI_UNSUPPORTED;
+  if (RelaOffset == MAX_UINT64) {
+    ASSERT (RelaCount     == 0);
+    ASSERT (RelaEntrySize == 0);
+    ASSERT (RelaSize      == 0);
+    //
+    // It's fine that a DYN ELF doesn't contain relocation section.
+    //
+    return EFI_SUCCESS;
   }
 
   //
