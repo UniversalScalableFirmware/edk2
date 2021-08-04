@@ -61,7 +61,6 @@
   gEfiGraphicsDeviceInfoHobGuid
   gUefiAcpiBoardInfoGuid
   gEfiSmbiosTableGuid
-  gEfiAcpiTableGuid
   gUefiSerialPortInfoGuid
   gUniversalPayloadExtraDataGuid
   gPcdDataBaseHobGuid

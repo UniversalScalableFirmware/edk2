@@ -131,6 +131,19 @@ LoadDxeCore (
   );
 
 /**
+  Find DXE FV from the payload FV.
+
+  @param[out]  DxeFv         The FV where to have the DXE core.
+
+  @retval EFI_SUCCESS        If it completed successfully.
+  @retval EFI_NOT_FOUND      If it failed to find DXE FV.
+**/
+EFI_STATUS
+GetDxeFv (
+  OUT  EFI_FIRMWARE_VOLUME_HEADER  **DxeFv
+  );
+
+/**
   Find DXE core from FV and build DXE core HOBs.
 
   @param[in]   DxeFv                 The FV where to find the DXE core.

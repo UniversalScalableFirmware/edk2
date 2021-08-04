@@ -312,6 +312,43 @@ LoadDxeCore (
 }
 
 /**
+  Find DXE FV from the payload FV.
+
+  @param[out]  DxeFv         The FV where to have the DXE core.
+
+  @retval EFI_SUCCESS        If it completed successfully.
+  @retval EFI_NOT_FOUND      If it failed to find DXE FV.
+**/
+EFI_STATUS
+GetDxeFv (
+  OUT  EFI_FIRMWARE_VOLUME_HEADER  **DxeFv
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_FIRMWARE_VOLUME_HEADER       *PayloadFv;
+  EFI_FIRMWARE_VOLUME_HEADER       *DxeCoreFv;
+  EFI_FFS_FILE_HEADER              *FileHeader;
+
+  PayloadFv = (EFI_FIRMWARE_VOLUME_HEADER *)(UINTN)PcdGet32 (PcdPayloadFdMemBase);
+
+  //
+  // DXE FV is inside Payload FV. Here find DXE FV from Payload FV
+  //
+  Status = FvFindFileByTypeGuid (PayloadFv, EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE, NULL, &FileHeader);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+  Status = FileFindSection (FileHeader, EFI_SECTION_FIRMWARE_VOLUME_IMAGE, (VOID **)&DxeCoreFv);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  *DxeFv = DxeCoreFv;
+
+  return EFI_SUCCESS;
+}
+
+/**
   Find DXE core from FV and build DXE core HOBs.
 
   @param[in]   DxeFv                 The FV where to find the DXE core.
