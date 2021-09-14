@@ -13,6 +13,7 @@
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/XenPlatformLib.h>
+#include <Library/DxeServicesLib.h>
 
 
 //
@@ -95,24 +96,12 @@ PlatformRegisterFvBootOption (
   EFI_BOOT_MANAGER_LOAD_OPTION      NewOption;
   EFI_BOOT_MANAGER_LOAD_OPTION      *BootOptions;
   UINTN                             BootOptionCount;
-  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
-  EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
 
-  Status = gBS->HandleProtocol (
-                  gImageHandle,
-                  &gEfiLoadedImageProtocolGuid,
-                  (VOID **) &LoadedImage
-                  );
-  ASSERT_EFI_ERROR (Status);
-
-  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
-  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
-  ASSERT (DevicePath != NULL);
-  DevicePath = AppendDevicePathNode (
-                 DevicePath,
-                 (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
-                 );
+  Status = GetFileDevicePathFromAnyFv(FileGuid, EFI_SECTION_PE32, 0, &DevicePath);
+  if (EFI_ERROR (Status)){
+    Status = GetFileDevicePathFromAnyFv(FileGuid, EFI_SECTION_USER_INTERFACE, 0, &DevicePath);
+  }
   ASSERT (DevicePath != NULL);
 
   Status = EfiBootManagerInitializeLoadOption (
