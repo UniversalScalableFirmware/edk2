@@ -1,0 +1,71 @@
+## @file
+#  This driver Initializes HOBs related to UniversalPayload.
+#
+#  Copyright (c) 2007 - 2019, Intel Corporation. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = UniversalPayloadInitializationPei
+  FILE_GUID                      = 7616AE39-438E-4A04-A5C4-A821C81B2B63
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UniversalPayloadInitialization
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Sources]
+  UniversalPayloadInitializationPei.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+  OvmfPkg/OvmfPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  PeimEntryPoint
+  PeiServicesLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  DebugLib
+  PcdLib
+  QemuFwCfgLib
+  QemuFwCfgS3Lib  
+  PciLib
+
+[Pcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvSize
+
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio
+
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio32Base
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio32Size
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Size
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Base
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciIoBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciIoSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio32Size
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvBase
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvSize
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+
+[Guids]
+  gUniversalPayloadSerialPortInfoGuid
+  gUniversalPayloadPciRootBridgeInfoGuid
+  gUefiAcpiBoardInfoGuid
+
+[Depex]
+  TRUE
