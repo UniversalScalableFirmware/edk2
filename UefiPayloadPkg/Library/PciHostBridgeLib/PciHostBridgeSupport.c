@@ -653,7 +653,7 @@ RetrieveRootBridgeInfoFromHob (
   } else {
     DEBUG ((DEBUG_ERROR, "There is root bridge whose ResourceAssigned is FALSE\n"));
     PcdSetBoolS (PcdPciDisableBusEnumeration, FALSE);
-    return NULL;
+    //return NULL;
   }
 
   return PciRootBridges;
