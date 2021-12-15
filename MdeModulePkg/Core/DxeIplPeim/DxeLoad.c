@@ -10,7 +10,33 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "DxeIpl.h"
 
+#include <Include/UniversalPayload/AcpiTable.h>
+#include <Include/UniversalPayload/SerialPortInfo.h>
+#include <Include/UniversalPayload/SmbiosTable.h>
+#include <Include/UniversalPayload/ExtraData.h>
+#include <Include/UniversalPayload/PciRootBridges.h>
+#include <Include/Guid/BootManagerMenu.h>
+#include <Include/Guid/AcpiBoardInfoGuid.h>
+#include <Guid/MemoryTypeInformation.h>
+#include <Ppi/SecPlatformInformation.h>
+#include <Guid/MicrocodePatchHob.h>
+#include <Guid/LzmaDecompress.h>
+#include <Guid/StatusCodeCallbackGuid.h>
+#include <Guid/MemoryStatusCodeRecord.h>
+#include <Guid/PcdDataBaseHobGuid.h>
 
+UINT16 HobTypes[11] =  {
+EFI_HOB_TYPE_HANDOFF,
+EFI_HOB_TYPE_MEMORY_ALLOCATION,
+EFI_HOB_TYPE_RESOURCE_DESCRIPTOR,
+EFI_HOB_TYPE_GUID_EXTENSION,
+EFI_HOB_TYPE_FV,
+EFI_HOB_TYPE_CPU,
+EFI_HOB_TYPE_MEMORY_POOL,
+EFI_HOB_TYPE_FV2,
+EFI_HOB_TYPE_UEFI_CAPSULE,
+EFI_HOB_TYPE_FV3
+};
 //
 // Module Globals used in the DXE to PEI hand off
 // These must be module globals, so the stack can be switched
@@ -119,6 +145,7 @@ PeimInitializeDxeIpl (
     Status = PeiServicesNotifyPpi (&mMemoryDiscoveredNotifyList);
     ASSERT_EFI_ERROR (Status);
   }
+
 
   //
   // Install DxeIpl PPI.
@@ -268,6 +295,8 @@ DxeLoadCore (
   EDKII_PEI_CAPSULE_ON_DISK_PPI             *PeiCapsuleOnDisk;
   EFI_MEMORY_TYPE_INFORMATION               MemoryData[EfiMaxMemoryType + 1];
   VOID                                      *CapsuleOnDiskModePpi;
+  EFI_PEI_HOB_POINTERS                      Hob;
+  UINTN                                     Index;
 
   //
   // if in S3 Resume, restore configure
@@ -441,6 +470,35 @@ DxeLoadCore (
   REPORT_STATUS_CODE (EFI_PROGRESS_CODE, (EFI_SOFTWARE_PEI_CORE | EFI_SW_PEI_CORE_PC_HANDOFF_TO_NEXT));
 
   DEBUG ((DEBUG_INFO | DEBUG_LOAD, "Loading DXE CORE at 0x%11p EntryPoint=0x%11p\n", (VOID *)(UINTN)DxeCoreAddress, FUNCTION_ENTRY_POINT (DxeCoreEntryPoint)));
+
+  Hob.Raw = (VOID *)GetHobList ();
+  while (!END_OF_HOB_LIST (Hob)) {
+  for (Index = 0; Index < ARRAY_SIZE (HobTypes); Index++) {
+    if (Hob.Header->HobType == HobTypes[Index]) {
+
+      if(HobTypes[Index] == EFI_HOB_TYPE_GUID_EXTENSION ||HobTypes[Index] == EFI_HOB_TYPE_HANDOFF || HobTypes[Index] == EFI_HOB_TYPE_END_OF_HOB_LIST ||
+           HobTypes[Index] ==  EFI_HOB_TYPE_CPU || HobTypes[Index] == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR || HobTypes[Index] == EFI_HOB_TYPE_MEMORY_ALLOCATION) {
+        if(HobTypes[Index] == EFI_HOB_TYPE_GUID_EXTENSION) {
+        if (CompareGuid (&Hob.Guid->Name, &gUniversalPayloadAcpiTableGuid) || CompareGuid (&Hob.Guid->Name, &gUniversalPayloadSerialPortInfoGuid) ||
+            CompareGuid (&Hob.Guid->Name, &gUniversalPayloadSmbios3TableGuid) || CompareGuid (&Hob.Guid->Name, &gUniversalPayloadSmbiosTableGuid) ||
+            CompareGuid (&Hob.Guid->Name, &gUefiAcpiBoardInfoGuid) || CompareGuid (&Hob.Guid->Name, &gUniversalPayloadPciRootBridgeInfoGuid) ||
+            CompareGuid (&Hob.Guid->Name, &gUniversalPayloadExtraDataGuid) || CompareGuid (&Hob.Guid->Name, &gPcdDataBaseHobGuid)){
+        }
+        else {
+          Hob.Header->HobType = EFI_HOB_TYPE_UNUSED;
+          }
+        }
+        continue;
+
+      }
+      else {
+        Hob.Header->HobType = EFI_HOB_TYPE_UNUSED;
+      }
+
+    }
+  }
+  Hob.Raw = GET_NEXT_HOB (Hob);
+  }
 
   //
   // Transfer control to the DXE Core
