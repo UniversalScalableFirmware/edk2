@@ -245,6 +245,7 @@
   Tcg2PhysicalPresenceLib|OvmfPkg/Library/Tcg2PhysicalPresenceLibNull/DxeTcg2PhysicalPresenceLib.inf
   TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
 !endif
+  MemoryMapLib|UefiPayloadPkg/Library/MemoryMapLib/MemoryMapLib.inf
 
 [LibraryClasses.common]
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
@@ -747,6 +748,7 @@ gEfiMdePkgTokenSpaceGuid.PcdConfidentialComputingGuestAttr|0
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
   }
 !endif
+  UefiPayloadPkg/PrepareForUniversalPayloadPeim/PrepareForUniversalPayloadPeim.inf
 
 [Components.X64]
   #

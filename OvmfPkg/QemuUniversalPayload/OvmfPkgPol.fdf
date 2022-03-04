@@ -175,7 +175,7 @@ INF  OvmfPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
 INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
-
+INF  UefiPayloadPkg/PrepareForUniversalPayloadPeim/PrepareForUniversalPayloadPeim.inf
 ################################################################################
 
 [FV.DXEFV]
