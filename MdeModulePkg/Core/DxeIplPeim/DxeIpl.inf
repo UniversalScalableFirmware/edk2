@@ -82,6 +82,7 @@
   ArmMmuLib
 
 [Ppis]
+  gEdkiiPrepareForUniversalPayloadPpiGuid
   gEfiDxeIplPpiGuid                      ## PRODUCES
   gEfiPeiDecompressPpiGuid               ## PRODUCES
   gEfiEndOfPeiSignalPpiGuid              ## SOMETIMES_PRODUCES # Not produced on S3 boot path

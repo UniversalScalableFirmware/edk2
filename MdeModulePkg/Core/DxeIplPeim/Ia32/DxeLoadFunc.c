@@ -10,6 +10,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "DxeIpl.h"
 #include "VirtualMemory.h"
+#include <Ppi/PrepareForUniversalPayload.h>
 
 #define IDT_ENTRY_COUNT  32
 
@@ -251,19 +252,21 @@ HandOffToDxeCore (
   IN EFI_PEI_HOB_POINTERS  HobList
   )
 {
-  EFI_STATUS                       Status;
-  EFI_PHYSICAL_ADDRESS             BaseOfStack;
-  EFI_PHYSICAL_ADDRESS             TopOfStack;
-  UINTN                            PageTables;
-  X64_IDT_GATE_DESCRIPTOR          *IdtTable;
-  UINTN                            SizeOfTemplate;
-  VOID                             *TemplateBase;
-  EFI_PHYSICAL_ADDRESS             VectorAddress;
-  UINT32                           Index;
-  X64_IDT_TABLE                    *IdtTableForX64;
-  EFI_VECTOR_HANDOFF_INFO          *VectorInfo;
-  EFI_PEI_VECTOR_HANDOFF_INFO_PPI  *VectorHandoffInfoPpi;
-  BOOLEAN                          BuildPageTablesIa32Pae;
+  EFI_STATUS                               Status;
+  EFI_PHYSICAL_ADDRESS                     BaseOfStack;
+  EFI_PHYSICAL_ADDRESS                     TopOfStack;
+  UINTN                                    PageTables;
+  X64_IDT_GATE_DESCRIPTOR                  *IdtTable;
+  UINTN                                    SizeOfTemplate;
+  VOID                                     *TemplateBase;
+  EFI_PHYSICAL_ADDRESS                     VectorAddress;
+  UINT32                                   Index;
+  X64_IDT_TABLE                            *IdtTableForX64;
+  EFI_VECTOR_HANDOFF_INFO                  *VectorInfo;
+  EFI_PEI_VECTOR_HANDOFF_INFO_PPI          *VectorHandoffInfoPpi;
+  EDKII_PREPARE_FOR_UNIVERSAL_PAYLOAD_PPI  *PrepareForUniversalPayloadPpi;
+  BOOLEAN                                  BuildPageTablesIa32Pae;
+  VOID                                     *Interface;
 
   //
   // Clear page 0 and mark it as allocated if NULL pointer detection is enabled.
@@ -275,6 +278,14 @@ HandOffToDxeCore (
 
   Status = PeiServicesAllocatePages (EfiBootServicesData, EFI_SIZE_TO_PAGES (STACK_SIZE), &BaseOfStack);
   ASSERT_EFI_ERROR (Status);
+
+  PrepareForUniversalPayloadPpi = NULL;
+  Status                        = PeiServicesLocatePpi (
+                                    &gEdkiiPrepareForUniversalPayloadPpiGuid,
+                                    0,
+                                    NULL,
+                                    (VOID **)&PrepareForUniversalPayloadPpi
+                                    );
 
   if (FeaturePcdGet (PcdDxeIplSwitchToLongMode)) {
     //
@@ -373,6 +384,17 @@ HandOffToDxeCore (
       BaseOfStack,
       STACK_SIZE
       ));
+    if (PrepareForUniversalPayloadPpi != NULL) {
+      Interface = PrepareForUniversalPayloadPpi->PrepareForUniversalPayload (HobList.Raw);
+      if (Interface == NULL) {
+        //
+        // Should not get here
+        //
+        CpuDeadLoop ();
+      }
+    } else {
+      Interface = HobList.Raw;
+    }
 
     //
     // Go to Long Mode and transfer control to DxeCore.
@@ -382,7 +404,7 @@ HandOffToDxeCore (
     AsmEnablePaging64 (
       SYS_CODE64_SEL,
       DxeCoreEntryPoint,
-      (EFI_PHYSICAL_ADDRESS)(UINTN)(HobList.Raw),
+      (EFI_PHYSICAL_ADDRESS)(UINTN)(Interface),
       0,
       TopOfStack
       );
@@ -461,6 +483,17 @@ HandOffToDxeCore (
       BaseOfStack,
       STACK_SIZE
       ));
+    if (PrepareForUniversalPayloadPpi != NULL) {
+      Interface = PrepareForUniversalPayloadPpi->PrepareForUniversalPayload (HobList.Raw);
+      if (Interface == NULL) {
+        //
+        // Should not get here
+        //
+        CpuDeadLoop ();
+      }
+    } else {
+      Interface = HobList.Raw;
+    }
 
     //
     // Transfer the control to the entry point of DxeCore.
@@ -468,14 +501,14 @@ HandOffToDxeCore (
     if (BuildPageTablesIa32Pae) {
       AsmEnablePaging32 (
         (SWITCH_STACK_ENTRY_POINT)(UINTN)DxeCoreEntryPoint,
-        HobList.Raw,
+        Interface,
         NULL,
         (VOID *)(UINTN)TopOfStack
         );
     } else {
       SwitchStack (
         (SWITCH_STACK_ENTRY_POINT)(UINTN)DxeCoreEntryPoint,
-        HobList.Raw,
+        Interface,
         NULL,
         (VOID *)(UINTN)TopOfStack
         );
