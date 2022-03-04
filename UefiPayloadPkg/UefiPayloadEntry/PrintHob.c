@@ -11,6 +11,7 @@
 #include <Guid/MemoryTypeInformation.h>
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/BootManagerMenu.h>
+#include <UniversalPayload/MemoryMap.h>
 
 #define ROW_LIMITER  16
 
@@ -459,6 +460,45 @@ PrintBootManagerMenuGuidHob (
   return EFI_SUCCESS;
 }
 
+/**
+  Print the information in gUniversalPayloadMemoryMapGuid.
+  @param[in] HobRaw          A pointer to the start of gUniversalPayloadMemoryMapGuid HOB.
+  @param[in] HobLength       The size of the data buffer.
+  @retval EFI_SUCCESS        If it completed successfully.
+**/
+EFI_STATUS
+PrintMemoryMapGuidHob (
+  IN  UINT8   *HobRaw,
+  IN  UINT16  HobLength
+  )
+{
+  UNIVERSAL_PAYLOAD_MEMORY_MAP  *MemoryMapHob;
+  EFI_MEMORY_DESCRIPTOR         *MemoryMap;
+  UINTN                         Index;
+
+  MemoryMapHob = (UNIVERSAL_PAYLOAD_MEMORY_MAP *)GET_GUID_HOB_DATA (HobRaw);
+  ASSERT (HobLength >= sizeof (*MemoryMapHob));
+  DEBUG ((DEBUG_INFO, "   Revision       = 0x%x\n", MemoryMapHob->Header.Revision));
+  DEBUG ((DEBUG_INFO, "   Length         = 0x%x\n", MemoryMapHob->Header.Length));
+  DEBUG ((DEBUG_INFO, "   Count          = %d\n", MemoryMapHob->Count));
+  DEBUG ((DEBUG_INFO, "   DescriptorSize = %d\n", MemoryMapHob->DescriptorSize));
+
+  for (Index = 0; Index < MemoryMapHob->Count; Index++) {
+    MemoryMap = (EFI_MEMORY_DESCRIPTOR *)((UINT8 *)(MemoryMapHob->MemoryMap) + Index * MemoryMapHob->DescriptorSize);
+    DEBUG ((
+      DEBUG_ERROR,
+      "   MemoryMap[%04d] [0x%lx, 0x%lx, as: %a with attribute 0x%lx]\n",
+      Index,
+      MemoryMap->PhysicalStart,
+      MemoryMap->PhysicalStart + MemoryMap->NumberOfPages * EFI_PAGE_SIZE,
+      mMemoryTypeStr[MemoryMap->Type],
+      MemoryMap->Attribute
+      ));
+  }
+
+  return EFI_SUCCESS;
+}
+
 //
 // Mappint table for dump Guid Hob information.
 // This table can be easily extented.
@@ -472,7 +512,8 @@ GUID_HOB_PRINT_HANDLE  GuidHobPrintHandleTable[] = {
   { &gUniversalPayloadPciRootBridgeInfoGuid, PrintPciRootBridgeInfoGuidHob, "gUniversalPayloadPciRootBridgeInfoGuid(Pci Guid)"            },
   { &gEfiMemoryTypeInformationGuid,          PrintMemoryTypeInfoGuidHob,    "gEfiMemoryTypeInformationGuid(Memory Type Information Guid)" },
   { &gUniversalPayloadExtraDataGuid,         PrintExtraDataGuidHob,         "gUniversalPayloadExtraDataGuid(PayLoad Extra Data Guid)"     },
-  { &gEdkiiBootManagerMenuFileGuid,          PrintBootManagerMenuGuidHob,   "gEdkiiBootManagerMenuFileGuid(Boot Manager Menu File Guid)"  }
+  { &gEdkiiBootManagerMenuFileGuid,          PrintBootManagerMenuGuidHob,   "gEdkiiBootManagerMenuFileGuid(Boot Manager Menu File Guid)"  },
+  { &gUniversalPayloadMemoryMapGuid,         PrintMemoryMapGuidHob,         "gUniversalPayloadMemoryMapGuid(Memory map)"                  }
 };
 
 /**
