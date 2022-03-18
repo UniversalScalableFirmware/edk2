@@ -20,3 +20,6 @@
 [submodule "RedfishPkg/Library/JsonLib/jansson"]
 	path = RedfishPkg/Library/JsonLib/jansson
 	url = https://github.com/akheron/jansson
+[submodule "UefiPayloadPkg/Library/UplData/tinycbor"]
+	path = UefiPayloadPkg/Library/UplData/tinycbor
+	url = https://github.com/intel/tinycbor.git
