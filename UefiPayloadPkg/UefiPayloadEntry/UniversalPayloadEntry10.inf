@@ -10,7 +10,7 @@
 [Defines]
   INF_VERSION                    = 0x00010005
   BASE_NAME                      = UniversalPayloadEntry
-  FILE_GUID                      = D4F0F269-1209-4A66-8039-C4D5A700EA4E
+  FILE_GUID                      = 8C5929A4-1EE1-4534-9289-7937888D1B1B
   MODULE_TYPE                    = SEC
   VERSION_STRING                 = 1.0
 
@@ -21,7 +21,7 @@
 #
 
 [Sources]
-  UniversalPayloadEntry.c
+  UniversalPayloadEntry10.c
   LoadDxeCore.c
   MemoryAllocation.c
   PrintHob.c

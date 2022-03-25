@@ -116,6 +116,9 @@
   # Note: for emulation platform such as QEMU, this may not work and should set it as FALSE
   DEFINE CPU_TIMER_LIB_ENABLE  = TRUE
 
+  # If follow Universal Scalable Firmware spec 1.0
+  DEFINE UNIVERSAL_SCALABLE_FIRMWARE_REVISION_10      = FALSE
+
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
   GCC:*_UNIXGCC_*_CC_FLAGS       = -DMDEPKG_NDEBUG
@@ -275,6 +278,7 @@
   HobLib|UefiPayloadPkg/Library/PayloadEntryHobLib/HobLib.inf
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
   DxeHobListLib|UefiPayloadPkg/Library/DxeHobListLibNull/DxeHobListLibNull.inf
+  GetUplDataLib|UefiPayloadPkg/Library/UplData/GetUplDataLib/GetUplDataLib.inf
 
 [LibraryClasses.common.DXE_CORE]
   DxeHobListLib|UefiPayloadPkg/Library/DxeHobListLibNull/DxeHobListLibNull.inf
@@ -508,14 +512,22 @@
 !if "IA32" in "$(ARCH)"
   [Components.IA32]
   !if $(UNIVERSAL_PAYLOAD) == TRUE
-    UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+    !if $(UNIVERSAL_SCALABLE_FIRMWARE_REVISION_10) == TRUE
+      UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry10.inf
+    !else
+      UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+    !endif
   !else
     UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
   !endif
 !else
   [Components.X64]
   !if $(UNIVERSAL_PAYLOAD) == TRUE
-    UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+    !if $(UNIVERSAL_SCALABLE_FIRMWARE_REVISION_10) == TRUE
+      UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry10.inf
+    !else
+      UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf
+    !endif
   !else
     UefiPayloadPkg/UefiPayloadEntry/UefiPayloadEntry.inf
   !endif

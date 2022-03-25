@@ -14,6 +14,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/GetUplDataLib.h>
 
 #define MEMORY_ATTRIBUTE_MASK  (EFI_RESOURCE_ATTRIBUTE_PRESENT             |        \
                                        EFI_RESOURCE_ATTRIBUTE_INITIALIZED         | \
@@ -685,4 +686,101 @@ CreateHandOffHobAndParseMemoryMap (
   }
 
   return Status;
+}
+
+/**
+  Create resource Hob that Uefi can use based on Memory Map Table.
+  This function assume the memory map table is sorted, and doesn't have overlap with each other.
+  Also this function assume the memory map table only contains physical memory range.
+
+  @retval      It will not return if SUCCESS, and return error when passing bootloader parameter.
+**/
+RETURN_STATUS
+CreateHobsBasedOnMemoryMap10 (
+  VOID
+  )
+{
+  EFI_PEI_HOB_POINTERS         Hob;
+  UINTN                        Index;
+  EFI_MEMORY_DESCRIPTOR        *MemMapTable;
+  EFI_MEMORY_DESCRIPTOR        *SortedMemMapTable;
+  EFI_MEMORY_DESCRIPTOR        SortBuffer;
+  EFI_HOB_RESOURCE_DESCRIPTOR  *ResourceDescriptor;
+  EFI_PHYSICAL_ADDRESS         MemMapTableLimit;
+
+  UINTN  Count;
+
+  Count = 0;
+  GetUplMemoryMap (NULL, &Count, 0);
+
+  SortedMemMapTable = AllocatePages (EFI_SIZE_TO_PAGES (sizeof (EFI_MEMORY_DESCRIPTOR) * Count));
+  if (SortedMemMapTable == NULL) {
+    ASSERT (FALSE);
+    return RETURN_UNSUPPORTED;
+  }
+  GetUplMemoryMap (SortedMemMapTable, &Count, 0);
+  QuickSort (SortedMemMapTable, Count, sizeof (EFI_MEMORY_DESCRIPTOR), MemoryMapTableCompare, &SortBuffer);
+  for (Index = 0; Index < Count; Index++) {
+    MemMapTable = (EFI_MEMORY_DESCRIPTOR *)(((UINT8 *)SortedMemMapTable) + Index * sizeof (EFI_MEMORY_DESCRIPTOR));
+    if ((Index != 0) && (MemMapTable->PhysicalStart < MemMapTableLimit)) {
+      ASSERT (FALSE);
+      return RETURN_UNSUPPORTED;
+    }
+
+    if ((MemMapTable->PhysicalStart & (EFI_PAGE_SIZE - 1)) != 0) {
+      ASSERT (FALSE);
+      return RETURN_UNSUPPORTED;
+    }
+
+    if (MemMapTable->NumberOfPages == 0) {
+      continue;
+    }
+
+    MemMapTableLimit = MemMapTable->PhysicalStart + EFI_PAGES_TO_SIZE (MemMapTable->NumberOfPages);
+    if (MemMapTableLimit < MemMapTable->PhysicalStart) {
+      ASSERT (FALSE);
+      return RETURN_UNSUPPORTED;
+    }
+
+    Hob.Raw            = GetHobList ();
+    ResourceDescriptor = NULL;
+    while (!END_OF_HOB_LIST (Hob)) {
+      if (Hob.Header->HobType == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
+        ResourceDescriptor = Hob.ResourceDescriptor;
+      }
+
+      Hob.Raw = GET_NEXT_HOB (Hob);
+    }
+
+    //
+    // Every Memory map range should be contained in one Resource Descriptor Hob.
+    //
+    if ((ResourceDescriptor != NULL) &&
+        (ResourceDescriptor->ResourceAttribute == ConvertCapabilitiesToResourceDescriptorHobAttributes (MemMapTable->Attribute)) &&
+        (ResourceDescriptor->ResourceType == ConvertEfiMemoryTypeToResourceDescriptorHobResourceType (MemMapTable->Type)) &&
+        (ResourceDescriptor->PhysicalStart + ResourceDescriptor->ResourceLength == MemMapTable->PhysicalStart))
+    {
+      ResourceDescriptor->ResourceLength += EFI_PAGES_TO_SIZE (MemMapTable->NumberOfPages);
+    } else {
+      BuildResourceDescriptorHob (
+        ConvertEfiMemoryTypeToResourceDescriptorHobResourceType (MemMapTable->Type),
+        ConvertCapabilitiesToResourceDescriptorHobAttributes (MemMapTable->Attribute),
+        MemMapTable->PhysicalStart,
+        EFI_PAGES_TO_SIZE (MemMapTable->NumberOfPages)
+        );
+    }
+
+    //
+    // Every used Memory map range should be contained in Memory Allocation Hob.
+    //
+    if (MemMapTable->Type != EfiConventionalMemory) {
+      BuildMemoryAllocationHob (
+        MemMapTable->PhysicalStart,
+        EFI_PAGES_TO_SIZE (MemMapTable->NumberOfPages),
+        MemMapTable->Type
+        );
+    }
+  }
+
+  return RETURN_SUCCESS;
 }

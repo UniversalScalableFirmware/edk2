@@ -48,6 +48,7 @@
   BaseLib
   PeimEntryPoint
   DebugLib
+  SetUplDataLib
 
 [Ppis]
   gEfiPeiLoadFilePpiGuid                 ## PRODUCES

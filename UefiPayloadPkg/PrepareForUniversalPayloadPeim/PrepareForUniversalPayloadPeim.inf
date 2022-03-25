@@ -36,6 +36,21 @@
   PeimEntryPoint
   DebugLib
   MemoryMapLib
+  SetUplDataLib
+  HobLib
+
+[Guids]
+  gUniversalPayloadMemoryMapGuid
+  gUniversalPayloadAcpiTableGuid
+  gUniversalPayloadSerialPortInfoGuid
+  gUniversalPayloadSmbios3TableGuid
+  gUniversalPayloadSmbiosTableGuid
+  gUefiAcpiBoardInfoGuid
+  gUniversalPayloadPciRootBridgeInfoGuid
+  gEfiMemoryTypeInformationGuid
+  gUniversalPayloadExtraDataGuid
+  gEdkiiBootManagerMenuFileGuid
+  gPcdDataBaseHobGuid
 
 [Ppis]
   gEdkiiPrepareForUniversalPayloadPpiGuid                 ## PRODUCES

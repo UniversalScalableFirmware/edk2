@@ -31,7 +31,7 @@ class UPLD_INFO_HEADER(LittleEndianStructure):
     def __init__(self):
         self.Identifier     =  b'UPLD'
         self.HeaderLength   = sizeof(UPLD_INFO_HEADER)
-        self.HeaderRevision = 0x0075
+        self.SpecRevision   = 0x0075
         self.Revision       = 0x0000010105
         self.ImageId        = b'UEFI'
         self.ProducerId     = b'INTEL'
@@ -54,12 +54,18 @@ def BuildUniversalPayload(Args, MacroList):
     BuildTarget = Args.Target
     ToolChain = Args.ToolChain
     ElfToolChain = 'CLANGDWARF'
-
-    EntryModuleInf = os.path.normpath("UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf")
-    DscPath = os.path.normpath("UefiPayloadPkg/UefiPayloadPkg.dsc")
+    upld_info_hdr = UPLD_INFO_HEADER()
+    upld_info_hdr.ImageId = Args.ImageId.encode()[:16]
     BuildDir = os.path.join(os.environ['WORKSPACE'], os.path.normpath("Build/UefiPayloadPkgX64"))
+    if 'UNIVERSAL_SCALABLE_FIRMWARE_REVISION_10' in MacroList and MacroList['UNIVERSAL_SCALABLE_FIRMWARE_REVISION_10'] == 'TRUE':
+        EntryModuleInf = os.path.normpath("UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry10.inf")
+        EntryOutputDir = os.path.join(BuildDir, f"{BuildTarget}_{ElfToolChain}", os.path.normpath("X64/UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry10/DEBUG/UniversalPayloadEntry.dll"))
+        upld_info_hdr.SpecRevision = 0x100
+    else:
+        EntryModuleInf = os.path.normpath("UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry.inf")
+        EntryOutputDir = os.path.join(BuildDir, f"{BuildTarget}_{ElfToolChain}", os.path.normpath("X64/UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry/DEBUG/UniversalPayloadEntry.dll"))
+    DscPath = os.path.normpath("UefiPayloadPkg/UefiPayloadPkg.dsc")
     FvOutputDir = os.path.join(BuildDir, f"{BuildTarget}_{ToolChain}", os.path.normpath("FV/DXEFV.Fv"))
-    EntryOutputDir = os.path.join(BuildDir, f"{BuildTarget}_{ElfToolChain}", os.path.normpath("X64/UefiPayloadPkg/UefiPayloadEntry/UniversalPayloadEntry/DEBUG/UniversalPayloadEntry.dll"))
     PayloadReportPath = os.path.join(BuildDir, "UefiUniversalPayload.txt")
     ModuleReportPath = os.path.join(BuildDir, "UefiUniversalPayloadEntry.txt")
     UpldInfoFile = os.path.join(BuildDir, "UniversalPayloadInfo.bin")
@@ -94,8 +100,6 @@ def BuildUniversalPayload(Args, MacroList):
     #
     # Buid Universal Payload Information Section ".upld_info"
     #
-    upld_info_hdr = UPLD_INFO_HEADER()
-    upld_info_hdr.ImageId = Args.ImageId.encode()[:16]
     fp = open(UpldInfoFile, 'wb')
     fp.write(bytearray(upld_info_hdr))
     fp.close()
