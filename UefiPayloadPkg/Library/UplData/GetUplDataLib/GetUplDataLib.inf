@@ -1,0 +1,43 @@
+## @file
+#  Get Universal Payload data library.
+#
+#  Copyright (c) 2022, Intel Corporation. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = GetUplDataLib
+  FILE_GUID                      = 1A914F8E-2610-4F08-85A7-35159A4F6F64
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = GetUplDataLib
+
+
+[Sources]
+  ../tinycbor/src/cborparser.c
+  GetUplDataLib.c
+  CborGetWrapper.c
+
+[LibraryClasses]
+  
+  PcdLib
+
+[Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio
+
+[Guids]
+  gUniversalPayloadSerialPortInfoGuid
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS =   -D CBOR_NO_FLOATING_POINT 
+  MSFT:*_*_*_CC_FLAGS = /DCBOR_NO_FLOATING_POINT /wd4366

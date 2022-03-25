@@ -1,0 +1,40 @@
+## @file
+#  Set Universal Payload data library.
+#
+#  Copyright (c) 2022, Intel Corporation. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SetUplDataLib
+  FILE_GUID                      = 2E3C405C-41D3-4B43-951E-2EAAEE75763E
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SetUplDataLib
+  CONSTRUCTOR                    = SetUplDataLibConstructor
+
+[Sources]
+  ../tinycbor/src/cborencoder.c
+  SetUplDataLib.c
+  CborSetWrapper.c
+
+[LibraryClasses]
+  PcdLib
+  HobLib
+
+[Guids]
+  gUniversalPayloadSerialPortInfoGuid
+  gUefiPayloadPkgTokenSpaceGuid
+  CborRootmapHobGuid
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS =   -D CBOR_NO_FLOATING_POINT 
+  MSFT:*_*_*_CC_FLAGS = /DCBOR_NO_FLOATING_POINT
