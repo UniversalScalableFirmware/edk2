@@ -246,6 +246,7 @@
   TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
 !endif
   SetUplDataLib|UefiPayloadPkg/Library/UplData/SetUplDataLib/SetUplDataLib.inf
+  MemoryMapLib|UefiPayloadPkg/Library/MemoryMapLib/MemoryMapLib.inf
 
 [LibraryClasses.common]
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
@@ -748,6 +749,7 @@ gEfiMdePkgTokenSpaceGuid.PcdConfidentialComputingGuestAttr|0
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
   }
 !endif
+UefiPayloadPkg/PrepareForUniversalPayloadPeim/PrepareForUniversalPayloadPeim.inf
 
 [Components.X64]
   #

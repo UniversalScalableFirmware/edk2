@@ -40,6 +40,7 @@
   QemuFwCfgLib
   QemuFwCfgS3Lib  
   PciLib
+  SetUplDataLib
 
 [Pcd]
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvBase

@@ -2,7 +2,7 @@
   goto ovmf
 )
 
-call py UefiPayloadPkg\UniversalPayloadBuild.py -t CLANGPDB -D CPU_TIMER_LIB_ENABLE=FALSE
+call py UefiPayloadPkg\UniversalPayloadBuild.py -t CLANGPDB -D CPU_TIMER_LIB_ENABLE=FALSE -D UNIVERSAL_SCALABLE_FIRMWARE_REVISION_10=TRUE
 if not %ERRORLEVEL% == 0 exit /b 1
 
 
