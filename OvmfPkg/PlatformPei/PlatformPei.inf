@@ -52,6 +52,8 @@
   gPldSerialPortInfoGuid
   gUefiAcpiBoardInfoGuid
   gPldPciRootBridgeInfoGuid
+  gSpiFlashInfoGuid
+  gNvVariableInfoGuid
 
 [LibraryClasses]
   BaseLib
@@ -73,6 +75,8 @@
   BaseMemoryLib
 
 [Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvSize
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfDxeMemFvBase
@@ -116,7 +120,9 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuBootLogicalProcessorNumber
   gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize
   gUefiCpuPkgTokenSpaceGuid.PcdSevEsIsEnabled
-
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFdBaseAddress
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFirmwareFdSize
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFirmwareBlockSize
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPldFvSize
 

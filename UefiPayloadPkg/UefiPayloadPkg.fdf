@@ -119,7 +119,9 @@ INF PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
   INF MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
   INF MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
   INF UefiCpuPkg/CpuIo2Smm/CpuIo2Smm.inf
+!if $(UNIVERSAL_PAYLOAD) == FALSE
   INF UefiCpuPkg/PiSmmCpuDxeSmm/PiSmmCpuDxeSmm.inf
+!endif
   INF UefiPayloadPkg/PchSmiDispatchSmm/PchSmiDispatchSmm.inf
 !endif
 

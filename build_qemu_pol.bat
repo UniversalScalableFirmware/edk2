@@ -32,7 +32,7 @@ if "%VS_VER%" == "" (
 )
 
 echo Building Universal UEFI payload DXE FV ...
-call build -p UefiPayloadPkg\UefiPayloadPkg.dsc -a X64 -D UNIVERSAL_PAYLOAD=TRUE -t %VS_VER% -y upllog.txt -D EMU_VARIABLE_ENABLE=TRUE
+call build -p UefiPayloadPkg\UefiPayloadPkg.dsc -a X64 -D UNIVERSAL_PAYLOAD=TRUE -t %VS_VER% -y upllog.txt
 if not %ERRORLEVEL% == 0 exit /b 1
 
 :entry
@@ -62,13 +62,13 @@ python UefiPayloadPkg\Tools\GenUpldInfo.py Build\upld_info UEFI
 
 :ovmf
 echo Building OVMF POL ...
-call build -p OvmfPkg\OvmfPkgPol.dsc -a IA32 -a X64 -D DEBUG_ON_SERIAL_PORT -t %VS_VER% -y ovmflog.txt
+call build -p OvmfPkg\OvmfPkgPol.dsc -a IA32 -a X64 -D DEBUG_ON_SERIAL_PORT  -D SMM_REQUIRE=TRUE  -t %VS_VER% -y ovmflog.txt
 @if not %ERRORLEVEL% == 0 exit /b 1
 goto :eof
 
 :run
 echo Running OVMF POL on QEMU ...
-"C:\Program Files\qemu\qemu-system-x86_64.exe" -m 512M -cpu max -machine q35,accel=tcg -bios Build\OvmfPol\DEBUG_%VS_VER%\FV\OVMF.fd -boot menu=on,splash-time=0 -net none --serial stdio
+"C:\Program Files\qemu\qemu-system-x86_64.exe" -m 512M -cpu max -machine q35,accel=tcg -drive file=Build\OvmfPol\DEBUG_%VS_VER%\FV\OVMF.fd,if=pflash,format=raw -boot menu=on,splash-time=0 -net none --serial stdio
 
 
 

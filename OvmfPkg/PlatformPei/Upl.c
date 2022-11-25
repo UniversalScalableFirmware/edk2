@@ -20,7 +20,8 @@
 #include <Library/QemuFwCfgLib.h>
 #include <OvmfPlatforms.h>
 #include <Library/BaseMemoryLib.h>
-
+#include <Guid/NvVariableInfoGuid.h>
+#include <Guid/SpiFlashInfoGuid.h>
 STATIC PLD_PCI_ROOT_BRIDGE_APERTURE mNonExistAperture = { MAX_UINT64, 0 };
 
 EFI_STATUS
@@ -363,5 +364,21 @@ UplInitialization (
   DEBUG ((DEBUG_ERROR, "%a: PciRootBridgeInfo->RootBridge[0].ResourceAssigned: 0x%04x\n",  __FUNCTION__, PciRootBridgeInfo->RootBridge[0].ResourceAssigned));
   DEBUG ((DEBUG_ERROR, "%a: PciRootBridgeInfo->RootBridge[0].ResourceAssigned: 0x%x\n",  __FUNCTION__, (UINTN)PciRootBridgeInfo->RootBridge[0].Bus.Limit));
   //PciRootBridgeInfo->RootBridge[0].ResourceAssigned = FALSE;
+
+  SPI_FLASH_INFO                   *NewSpiFlashInfo;
+  NewSpiFlashInfo = BuildGuidHob (&gSpiFlashInfoGuid, sizeof (SPI_FLASH_INFO));
+  NewSpiFlashInfo->Flags = TRUE;
+  NewSpiFlashInfo->SpiAddress.AddressSpaceId =  EFI_ACPI_3_0_PCI_CONFIGURATION_SPACE;
+  NewSpiFlashInfo->SpiAddress.RegisterBitWidth =  32;
+  NewSpiFlashInfo->SpiAddress.RegisterBitOffset =  0;
+  NewSpiFlashInfo->SpiAddress.AccessSize =  EFI_ACPI_3_0_DWORD;
+  NewSpiFlashInfo->SpiAddress.Address = (UINT64) PcdGet32 (PcdOvmfFdBaseAddress);
+
+  NV_VARIABLE_INFO                   *NewNvVariableInfo;
+  NewNvVariableInfo = BuildGuidHob (&gNvVariableInfoGuid, sizeof (NV_VARIABLE_INFO));
+  NewNvVariableInfo->VariableStoreBase = FixedPcdGet32 (PcdFlashNvStorageVariableBase64);
+  NewNvVariableInfo->VariableStoreSize= 2 * (FixedPcdGet32 (PcdFlashNvStorageVariableSize) + 0x2000);
+  // 0x2000 is a hard code value in UefiPayloadPkg\FvbRuntimeDxe\FvbInfo.c, line 95:   FtwWorkingSize = 0x2000;
+
 }
 
